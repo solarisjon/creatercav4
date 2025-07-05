@@ -264,6 +264,55 @@ class MCPClient:
             logger.error(f"Failed to search Jira tickets: {e}")
             raise
     
+    async def get_linked_issues_grouped(self, issue_key: str) -> Dict[str, list]:
+        """
+        Fetch all linked issues for a Jira ticket, grouped by their link type (e.g., 'Relates').
+        Returns a dict: { link_type: [ {key, summary, direction}, ... ] }
+        """
+        try:
+            from jira import JIRA
+
+            jira_config = config.jira_config
+
+            headers = {
+                'Authorization': f'Bearer {jira_config["api_token"]}'
+            }
+            jira = JIRA(
+                server=jira_config['url'],
+                options={'headers': headers, 'verify': False}
+            )
+            logger.info("Successfully authenticated with Bearer token")
+
+            issue = jira.issue(issue_key, fields="issuelinks")
+            grouped = {}
+
+            for link in getattr(issue.fields, "issuelinks", []):
+                # Outward (this issue links to another)
+                if hasattr(link, "outwardIssue"):
+                    linked = link.outwardIssue
+                    link_type = link.type.outward or link.type.name
+                    direction = "outward"
+                # Inward (another issue links to this)
+                elif hasattr(link, "inwardIssue"):
+                    linked = link.inwardIssue
+                    link_type = link.type.inward or link.type.name
+                    direction = "inward"
+                else:
+                    continue
+
+                entry = {
+                    "key": linked.key,
+                    "summary": getattr(linked.fields, "summary", ""),
+                    "direction": direction
+                }
+                grouped.setdefault(link_type, []).append(entry)
+
+            return grouped
+
+        except Exception as e:
+            logger.error(f"Failed to fetch linked issues for {issue_key}: {e}")
+            raise
+
     async def get_server_info(self) -> Dict[str, Any]:
         """Get information about available MCP servers"""
         return {
