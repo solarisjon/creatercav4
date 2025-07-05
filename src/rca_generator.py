@@ -33,13 +33,9 @@ class RCAGenerator:
             # Create RCA document
             document_path = await self._create_rca_document(analysis)
             
-            # Create Jira tickets if requested
-            jira_tickets_created = await self._create_jira_tickets(analysis)
-            
             result = {
                 'analysis': analysis,
                 'document_path': str(document_path),
-                'jira_tickets': jira_tickets_created,
                 'timestamp': datetime.now().isoformat(),
                 'source_data_summary': {
                     'files_processed': len(files),
@@ -487,6 +483,9 @@ class RCAGenerator:
             timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
             output_file = self.output_dir / f"rca_report_{timestamp}.json"
             
+            # Create output directory if it doesn't exist
+            self.output_dir.mkdir(parents=True, exist_ok=True)
+            
             # For now, save as JSON. Later we can implement Word document generation
             with open(output_file, 'w', encoding='utf-8') as f:
                 json.dump(analysis, f, indent=2, ensure_ascii=False)
@@ -498,48 +497,6 @@ class RCAGenerator:
             logger.error(f"Failed to create RCA document: {e}")
             raise
     
-    async def _create_jira_tickets(self, analysis: Dict[str, Any]) -> List[str]:
-        """Create Jira tickets based on analysis"""
-        tickets_created = []
-        
-        try:
-            # Create escalation ticket if needed
-            if analysis.get('escalation_needed') == 'true':
-                escalation_ticket = await mcp_client.create_jira_ticket({
-                    'project': config.jira_config['escalation_project'],
-                    'summary': f"ESCALATION: {analysis['problem_statement'][:100]}",
-                    'description': f"Root Cause Analysis Escalation\n\n"
-                                 f"Problem: {analysis['problem_statement']}\n\n"
-                                 f"Root Cause: {analysis['root_cause']}\n\n"
-                                 f"Impact: {analysis['impact_assessment']}\n\n"
-                                 f"Severity: {analysis['severity']}\n"
-                                 f"Priority: {analysis['priority']}",
-                    'issue_type': 'Task',
-                    'priority': analysis.get('priority', 'Medium')
-                })
-                tickets_created.append(escalation_ticket)
-                logger.info(f"Created escalation ticket: {escalation_ticket}")
-            
-            # Create defect tickets if needed
-            if analysis.get('defect_tickets_needed') == 'true':
-                defect_ticket = await mcp_client.create_jira_ticket({
-                    'project': config.jira_config['defect_project'],
-                    'summary': f"DEFECT: {analysis['problem_statement'][:100]}",
-                    'description': f"Defect identified from Root Cause Analysis\n\n"
-                                 f"Problem: {analysis['problem_statement']}\n\n"
-                                 f"Root Cause: {analysis['root_cause']}\n\n"
-                                 f"Contributing Factors: {', '.join(analysis['contributing_factors'])}\n\n"
-                                 f"Corrective Actions: {', '.join(analysis['corrective_actions'])}",
-                    'issue_type': 'Bug',
-                    'priority': analysis.get('priority', 'Medium')
-                })
-                tickets_created.append(defect_ticket)
-                logger.info(f"Created defect ticket: {defect_ticket}")
-            
-        except Exception as e:
-            logger.error(f"Failed to create Jira tickets: {e}")
-        
-        return tickets_created
 
 # Global RCA generator instance
 rca_generator = RCAGenerator()

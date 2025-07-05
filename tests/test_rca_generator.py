@@ -37,10 +37,10 @@ class TestRCAGenerator:
         test_file.write_text("Test file content")
         
         with patch('src.rca_generator.mcp_client') as mock_mcp:
-            mock_mcp.read_file.return_value = "Test file content"
-            mock_mcp.process_pdf.return_value = "PDF content"
-            mock_mcp.scrape_web_content.return_value = "Web content"
-            mock_mcp.search_jira_tickets.return_value = [{'key': 'TEST-123', 'summary': 'Test'}]
+            mock_mcp.read_file = AsyncMock(return_value="Test file content")
+            mock_mcp.process_pdf = AsyncMock(return_value="PDF content")
+            mock_mcp.scrape_web_content = AsyncMock(return_value="Web content")
+            mock_mcp.search_jira_tickets = AsyncMock(return_value=[{'key': 'TEST-123', 'summary': 'Test'}])
             
             source_data = await rca_generator._collect_source_data(
                 files=[str(test_file)],
@@ -58,7 +58,7 @@ class TestRCAGenerator:
         pdf_file.write_bytes(b"fake pdf content")
         
         with patch('src.rca_generator.mcp_client') as mock_mcp:
-            mock_mcp.process_pdf.return_value = "PDF text content"
+            mock_mcp.process_pdf = AsyncMock(return_value="PDF text content")
             
             source_data = await rca_generator._collect_source_data(
                 files=[str(pdf_file)],
@@ -76,7 +76,7 @@ class TestRCAGenerator:
         test_url = "https://example.com"
         
         with patch('src.rca_generator.mcp_client') as mock_mcp:
-            mock_mcp.scrape_web_content.return_value = "Web page content"
+            mock_mcp.scrape_web_content = AsyncMock(return_value="Web page content")
             
             source_data = await rca_generator._collect_source_data(
                 files=[],
@@ -94,7 +94,7 @@ class TestRCAGenerator:
         ticket_id = "TEST-123"
         
         with patch('src.rca_generator.mcp_client') as mock_mcp:
-            mock_mcp.search_jira_tickets.return_value = [sample_jira_ticket]
+            mock_mcp.search_jira_tickets = AsyncMock(return_value=[sample_jira_ticket])
             
             source_data = await rca_generator._collect_source_data(
                 files=[],
@@ -113,7 +113,7 @@ class TestRCAGenerator:
         test_file.write_text("Test content")
         
         with patch('src.rca_generator.mcp_client') as mock_mcp:
-            mock_mcp.read_file.side_effect = Exception("File read error")
+            mock_mcp.read_file = AsyncMock(side_effect=Exception("File read error"))
             
             source_data = await rca_generator._collect_source_data(
                 files=[str(test_file)],
@@ -135,7 +135,7 @@ class TestRCAGenerator:
                 'https://example.com': {'content': 'Web content'}
             },
             'jira_tickets': {
-                'TEST-123': {'key': 'TEST-123', 'summary': 'Test issue', 'description': 'Test description'}
+                'TEST-123': {'key': 'TEST-123', 'summary': 'Test issue', 'description': 'Test description', 'status': 'Open', 'priority': 'Medium'}
             }
         }
         
@@ -154,7 +154,7 @@ class TestRCAGenerator:
         """Test successful analysis generation with OpenAI"""
         context = "Test context for analysis"
         
-        with patch('src.rca_generator.openai.AsyncOpenAI') as mock_openai_class:
+        with patch('openai.AsyncOpenAI') as mock_openai_class:
             mock_client = AsyncMock()
             mock_response = Mock()
             mock_choice = Mock()
@@ -175,7 +175,7 @@ class TestRCAGenerator:
         """Test OpenAI analysis generation with error"""
         context = "Test context"
         
-        with patch('src.rca_generator.openai.AsyncOpenAI') as mock_openai_class:
+        with patch('openai.AsyncOpenAI') as mock_openai_class:
             mock_openai_class.side_effect = Exception("OpenAI API error")
             
             with pytest.raises(Exception):
@@ -186,7 +186,7 @@ class TestRCAGenerator:
         """Test successful analysis generation with Anthropic"""
         context = "Test context for analysis"
         
-        with patch('src.rca_generator.anthropic.AsyncAnthropic') as mock_anthropic_class:
+        with patch('anthropic.AsyncAnthropic') as mock_anthropic_class:
             mock_client = AsyncMock()
             mock_response = Mock()
             mock_content = Mock()
@@ -205,7 +205,7 @@ class TestRCAGenerator:
         """Test Anthropic analysis generation with error"""
         context = "Test context"
         
-        with patch('src.rca_generator.anthropic.AsyncAnthropic') as mock_anthropic_class:
+        with patch('anthropic.AsyncAnthropic') as mock_anthropic_class:
             mock_anthropic_class.side_effect = Exception("Anthropic API error")
             
             with pytest.raises(Exception):
@@ -227,65 +227,6 @@ class TestRCAGenerator:
         
         assert saved_analysis == analysis
     
-    @pytest.mark.asyncio
-    async def test_create_jira_tickets_escalation(self, rca_generator, mock_openai_response):
-        """Test Jira escalation ticket creation"""
-        analysis = mock_openai_response.copy()
-        analysis['escalation_needed'] = 'true'
-        analysis['defect_tickets_needed'] = 'false'
-        
-        with patch('src.rca_generator.mcp_client') as mock_mcp:
-            mock_mcp.create_jira_ticket.return_value = 'TEST-124'
-            
-            tickets = await rca_generator._create_jira_tickets(analysis)
-            
-            assert len(tickets) == 1
-            assert tickets[0] == 'TEST-124'
-            mock_mcp.create_jira_ticket.assert_called_once()
-    
-    @pytest.mark.asyncio
-    async def test_create_jira_tickets_defect(self, rca_generator, mock_openai_response):
-        """Test Jira defect ticket creation"""
-        analysis = mock_openai_response.copy()
-        analysis['escalation_needed'] = 'false'
-        analysis['defect_tickets_needed'] = 'true'
-        
-        with patch('src.rca_generator.mcp_client') as mock_mcp:
-            mock_mcp.create_jira_ticket.return_value = 'TEST-125'
-            
-            tickets = await rca_generator._create_jira_tickets(analysis)
-            
-            assert len(tickets) == 1
-            assert tickets[0] == 'TEST-125'
-    
-    @pytest.mark.asyncio
-    async def test_create_jira_tickets_both(self, rca_generator, mock_openai_response):
-        """Test creating both escalation and defect tickets"""
-        analysis = mock_openai_response.copy()
-        analysis['escalation_needed'] = 'true'
-        analysis['defect_tickets_needed'] = 'true'
-        
-        with patch('src.rca_generator.mcp_client') as mock_mcp:
-            mock_mcp.create_jira_ticket.side_effect = ['TEST-124', 'TEST-125']
-            
-            tickets = await rca_generator._create_jira_tickets(analysis)
-            
-            assert len(tickets) == 2
-            assert 'TEST-124' in tickets
-            assert 'TEST-125' in tickets
-    
-    @pytest.mark.asyncio
-    async def test_create_jira_tickets_none(self, rca_generator, mock_openai_response):
-        """Test no Jira ticket creation when not needed"""
-        analysis = mock_openai_response.copy()
-        analysis['escalation_needed'] = 'false'
-        analysis['defect_tickets_needed'] = 'false'
-        
-        with patch('src.rca_generator.mcp_client') as mock_mcp:
-            tickets = await rca_generator._create_jira_tickets(analysis)
-            
-            assert len(tickets) == 0
-            mock_mcp.create_jira_ticket.assert_not_called()
     
     @pytest.mark.asyncio
     async def test_generate_rca_analysis_full_flow(self, rca_generator, temp_dir, mock_openai_response):
@@ -303,10 +244,9 @@ class TestRCAGenerator:
              patch.object(rca_generator, '_generate_analysis') as mock_generate:
             
             # Setup mocks
-            mock_mcp.read_file.return_value = "File content"
-            mock_mcp.scrape_web_content.return_value = "Web content"
-            mock_mcp.search_jira_tickets.return_value = [{'key': 'TEST-123', 'summary': 'Test'}]
-            mock_mcp.create_jira_ticket.side_effect = ['TEST-124', 'TEST-125']
+            mock_mcp.read_file = AsyncMock(return_value="File content")
+            mock_mcp.scrape_web_content = AsyncMock(return_value="Web content")
+            mock_mcp.search_jira_tickets = AsyncMock(return_value=[{'key': 'TEST-123', 'summary': 'Test'}])
             
             mock_generate.return_value = mock_openai_response
             
@@ -320,7 +260,6 @@ class TestRCAGenerator:
             # Verify result structure
             assert 'analysis' in result
             assert 'document_path' in result
-            assert 'jira_tickets' in result
             assert 'timestamp' in result
             assert 'source_data_summary' in result
             
@@ -364,7 +303,7 @@ class TestRCAGenerator:
         """Test successful analysis generation with OpenRouter"""
         context = "Test context for analysis"
         
-        with patch('src.rca_generator.openai.AsyncOpenAI') as mock_openai_class:
+        with patch('openai.AsyncOpenAI') as mock_openai_class:
             mock_client = AsyncMock()
             mock_response = Mock()
             mock_choice = Mock()
@@ -390,7 +329,7 @@ class TestRCAGenerator:
         """Test OpenRouter analysis generation with error"""
         context = "Test context"
         
-        with patch('src.rca_generator.openai.AsyncOpenAI') as mock_openai_class:
+        with patch('openai.AsyncOpenAI') as mock_openai_class:
             mock_openai_class.side_effect = Exception("OpenRouter API error")
             
             with pytest.raises(Exception):

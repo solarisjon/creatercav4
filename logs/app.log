@@ -42,3 +42,18 @@
 2025-07-05 10:30:35,659 - src.app - INFO - File uploaded successfully: uploads/NFS_Performance_Escalation_Report_2.pdf
 2025-07-05 10:30:35,660 - src.utils.file_handler - INFO - File saved: uploads/NFS_Performance_Support_Case_2.pdf
 2025-07-05 10:30:35,661 - src.app - INFO - File uploaded successfully: uploads/NFS_Performance_Support_Case_2.pdf
+2025-07-05 10:47:47,055 - __main__ - INFO - Starting MCP-based RCA Tool
+2025-07-05 10:47:47,141 - __main__ - INFO - Starting server on 0.0.0.0:8090
+2025-07-05 10:47:47,170 - src.app - INFO - MCP client initialized successfully
+2025-07-05 10:47:47,374 - src.app - INFO - MCP client initialized successfully
+2025-07-05 10:48:21,256 - __main__ - INFO - Starting MCP-based RCA Tool
+2025-07-05 10:48:21,332 - __main__ - INFO - Starting server on 0.0.0.0:8090
+2025-07-05 10:48:21,352 - src.app - INFO - MCP client initialized successfully
+2025-07-05 10:48:21,555 - src.app - INFO - MCP client initialized successfully
+2025-07-05 10:48:29,488 - src.utils.file_handler - INFO - File saved: uploads/NFS_Performance_Escalation_Report_3.pdf
+2025-07-05 10:48:29,489 - src.app - INFO - File uploaded successfully: uploads/NFS_Performance_Escalation_Report_3.pdf
+2025-07-05 10:48:29,492 - src.utils.file_handler - INFO - File saved: uploads/NFS_Performance_Support_Case_3.pdf
+2025-07-05 10:48:29,492 - src.app - INFO - File uploaded successfully: uploads/NFS_Performance_Support_Case_3.pdf
+2025-07-05 10:50:21,259 - src.app - INFO - MCP client initialized successfully
+2025-07-05 10:52:57,801 - src.app - INFO - MCP client initialized successfully
+2025-07-05 10:55:28,774 - src.app - INFO - MCP client initialized successfully

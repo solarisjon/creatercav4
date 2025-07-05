@@ -7,7 +7,7 @@ A modern web-based Root Cause Analysis (RCA) tool that leverages Model Context P
 - **Multi-Source Data Integration**: Process PDF files, web URLs, and Jira tickets
 - **MCP Server Architecture**: Uses Model Context Protocol for efficient data access
 - **Modern Web UI**: Built with NiceGUI for responsive, interactive experience
-- **Automated Jira Integration**: Create escalation and defect tickets automatically
+- **Jira Integration**: Read and reference existing Jira tickets for context
 - **Comprehensive Analysis**: Generate detailed RCA reports with LLM assistance
 - **Multi-LLM Support**: Works with OpenAI GPT, Anthropic Claude, and OpenRouter models
 - **Comprehensive Testing**: Full unit test coverage for reliable operation
@@ -100,15 +100,15 @@ allowed_file_types = .pdf,.txt,.docx,.md
 3. **Upload source materials**:
    - PDF files (support cases, documentation)
    - Add web URLs (Confluence pages, documentation)
-   - Reference Jira tickets for context
+   - Reference Jira tickets for context (read-only)
 
 4. **Describe the issue** requiring root cause analysis
 
 5. **Generate RCA report** - the system will:
    - Process all uploaded files and URLs
-   - Analyze Jira ticket data
+   - Read and analyze referenced Jira tickets for context
    - Generate comprehensive RCA using LLM
-   - Optionally create escalation/defect tickets
+   - Create detailed analysis report
 
 ## Project Structure
 
@@ -208,7 +208,7 @@ The application supports multiple MCP servers:
 
 ### Available Servers
 - **Filesystem MCP**: Secure file operations with access controls
-- **Jira MCP**: Ticket creation, search, and management
+- **Jira MCP**: Read and search existing tickets for context
 - **Web Scraper MCP**: Content extraction from web URLs
 
 ### Third-Party MCP Servers
