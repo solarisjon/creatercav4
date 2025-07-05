@@ -14,35 +14,35 @@ logger = logging.getLogger(__name__)
 
 def extract_template_prompts(template_path):
     """
-    Parse the Word template and extract a list of (header, prompt) tuples.
-    Returns: List[Dict] with keys: 'header', 'prompt', 'header_idx', 'prompt_idx'
+    Parse the Word template and extract a list of (header, prompt) sections.
+    Each section is a dict: {'header': str, 'prompt': str, 'header_idx': int, 'prompt_idx': int}
+    Prompts are any text between < > under a header.
     """
     doc = Document(template_path)
     results = []
     paragraphs = doc.paragraphs
     i = 0
-    while i < len(paragraphs) - 1:
+    while i < len(paragraphs):
         header = paragraphs[i].text.strip()
-        prompt = paragraphs[i+1].text.strip()
-        # Heuristic: header is non-empty, prompt is non-empty and contains a prompt word
-        if header and prompt and (
-            "enter" in prompt.lower() or
-            "describe" in prompt.lower() or
-            "summarize" in prompt.lower() or
-            "list" in prompt.lower() or
-            "provide" in prompt.lower() or
-            "explain" in prompt.lower() or
-            "prompt" in prompt.lower()
-        ):
-            results.append({
-                "header": header,
-                "prompt": prompt,
-                "header_idx": i,
-                "prompt_idx": i+1
-            })
-            i += 2
-        else:
-            i += 1
+        if header:
+            # Look for the next paragraph with a prompt in < >
+            j = i + 1
+            while j < len(paragraphs):
+                prompt_match = re.search(r"<(.+?)>", paragraphs[j].text)
+                if prompt_match:
+                    prompt = prompt_match.group(1).strip()
+                    results.append({
+                        "header": header,
+                        "prompt": prompt,
+                        "header_idx": i,
+                        "prompt_idx": j
+                    })
+                    break
+                # If we hit another header, stop
+                if paragraphs[j].text.strip():
+                    break
+                j += 1
+        i += 1
     return results
 
 class RCAGenerator:
@@ -649,7 +649,10 @@ class RCAGenerator:
         }
     
     async def _create_rca_document(self, analysis: Dict[str, Any]) -> Path:
-        """Create RCA document from analysis, filling in the Word template"""
+        """Create RCA document from analysis, filling in the Word template.
+        Prompts are detected as <...> and replaced with generated text.
+        If not enough data, fill with 'Unable to accurately find enough data'.
+        """
         try:
             timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
             output_file = self.output_dir / f"rca_report_{timestamp}.docx"
@@ -666,60 +669,48 @@ class RCAGenerator:
 
             doc = Document(template_path)
 
-            # Map analysis keys to possible section headers in the template
-            section_map = {
-                "executive_summary": ["Executive Summary"],
-                "problem_statement": ["Problem Statement"],
-                "timeline": ["Timeline"],
-                "root_cause": ["Root Cause"],
-                "contributing_factors": ["Contributing Factors"],
-                "impact_assessment": ["Impact Assessment"],
-                "corrective_actions": ["Corrective Actions"],
-                "preventive_measures": ["Preventive Measures"],
-                "recommendations": ["Recommendations"],
-                "escalation_needed": ["Escalation Needed"],
-                "defect_tickets_needed": ["Defect Tickets Needed"],
-                "severity": ["Severity"],
-                "priority": ["Priority"],
-            }
+            # Extract all <prompt> under each header
+            prompts = extract_template_prompts(template_path)
 
-            # Flatten analysis values for insertion
-            def get_section_content(key):
-                val = analysis.get(key, "")
-                if isinstance(val, list):
-                    return "\n".join(f"- {v}" for v in val)
-                if isinstance(val, bool):
-                    return "Yes" if val else "No"
-                return str(val)
+            # Build a mapping from header to prompt and paragraph index
+            header_to_prompt_idx = {}
+            for section in prompts:
+                header = section['header']
+                prompt = section['prompt']
+                header_idx = section['header_idx']
+                prompt_idx = section['prompt_idx']
+                header_to_prompt_idx[header] = {
+                    "prompt": prompt,
+                    "header_idx": header_idx,
+                    "prompt_idx": prompt_idx
+                }
 
-            # Fill in the template by replacing prompts with analysis content
-            # Avoid using doc.paragraphs.index(para) due to possible duplicate paragraph objects
-            section_headers_flat = [h for hs in section_map.values() for h in hs]
-            i = 0
-            while i < len(doc.paragraphs):
-                para = doc.paragraphs[i]
-                for key, headers in section_map.items():
-                    for header in headers:
-                        if para.text.strip().lower() == header.lower():
-                            # Look ahead for the prompt paragraph
-                            j = i + 1
-                            while j < len(doc.paragraphs):
-                                next_para = doc.paragraphs[j]
-                                if next_para.text.strip() and (
-                                    "enter" in next_para.text.lower() or
-                                    "describe" in next_para.text.lower() or
-                                    "summarize" in next_para.text.lower() or
-                                    "list" in next_para.text.lower() or
-                                    "provide" in next_para.text.lower() or
-                                    "explain" in next_para.text.lower() or
-                                    "prompt" in next_para.text.lower()
-                                ):
-                                    next_para.text = get_section_content(key)
-                                    break
-                                if next_para.text.strip() in section_headers_flat:
-                                    break
-                                j += 1
-                i += 1
+            # For each header, try to find a matching key in analysis (case-insensitive, underscores/space-insensitive)
+            def find_analysis_key(header):
+                norm_header = header.lower().replace(" ", "_")
+                for k in analysis.keys():
+                    if k.lower().replace(" ", "_") == norm_header:
+                        return k
+                return None
+
+            # For each prompt, replace the <...> in the paragraph with the generated text, or fallback if missing
+            for header, info in header_to_prompt_idx.items():
+                key = find_analysis_key(header)
+                value = analysis.get(key) if key else None
+                if value is None or (isinstance(value, str) and not value.strip()):
+                    value = "Unable to accurately find enough data"
+                elif isinstance(value, list):
+                    value = "\n".join(f"- {v}" for v in value)
+                elif isinstance(value, bool):
+                    value = "Yes" if value else "No"
+                else:
+                    value = str(value)
+                para = doc.paragraphs[info['prompt_idx']]
+                # Replace <...> with value, or if not found, just set text
+                para.text = re.sub(r"<(.+?)>", value, para.text)
+                # If no <...> found, just replace the whole paragraph with value
+                if "<" not in para.text and ">" not in para.text and not re.search(r"<(.+?)>", para.text):
+                    para.text = value
 
             # Save the filled document
             doc.save(output_file)
