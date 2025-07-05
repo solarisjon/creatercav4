@@ -770,8 +770,11 @@ class RCAGenerator:
                         return k
                 return None
 
-            # For each prompt, replace the <...> in the paragraph with the generated text, or fallback if missing
-            for header, info in header_to_prompt_idx.items():
+            # For each template section, fill the value after the header, always, in order.
+            for section in prompts:
+                header = section['header']
+                prompt_idx = section['prompt_idx']
+                header_idx = section['header_idx']
                 key = find_analysis_key(header)
                 value = analysis.get(key) if key else None
                 if value is None or (isinstance(value, str) and not value.strip()):
@@ -782,20 +785,16 @@ class RCAGenerator:
                     value = "Yes" if value else "No"
                 else:
                     value = str(value)
-                # Only try to access para if prompt_idx is not None
-                if info['prompt_idx'] is not None:
-                    para = doc.paragraphs[info['prompt_idx']]
-                    # Replace <...> with value, or if not found, just set text
+                # If prompt is present, replace it
+                if prompt_idx is not None:
+                    para = doc.paragraphs[prompt_idx]
                     para.text = re.sub(r"<(.+?)>", value, para.text)
                     # If no <...> found, just replace the whole paragraph with value
                     if "<" not in para.text and ">" not in para.text and not re.search(r"<(.+?)>", para.text):
                         para.text = value
-                else:
-                    # If there is no prompt_idx, try to insert value after the header
-                    header_idx = info['header_idx']
-                    # Only insert if header_idx is valid and not the last paragraph
-                    if header_idx is not None and header_idx + 1 < len(doc.paragraphs):
-                        doc.paragraphs[header_idx + 1].text = value
+                # Always insert value after the header (even if prompt is present or not)
+                if header_idx is not None and header_idx + 1 < len(doc.paragraphs):
+                    doc.paragraphs[header_idx + 1].text = value
 
             # Save the filled document
             doc.save(output_file)
