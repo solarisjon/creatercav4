@@ -12,11 +12,54 @@ import re
 
 logger = logging.getLogger(__name__)
 
+def extract_template_prompts(template_path):
+    """
+    Parse the Word template and extract a list of (header, prompt) tuples.
+    Returns: List[Dict] with keys: 'header', 'prompt', 'header_idx', 'prompt_idx'
+    """
+    doc = Document(template_path)
+    results = []
+    paragraphs = doc.paragraphs
+    i = 0
+    while i < len(paragraphs) - 1:
+        header = paragraphs[i].text.strip()
+        prompt = paragraphs[i+1].text.strip()
+        # Heuristic: header is non-empty, prompt is non-empty and contains a prompt word
+        if header and prompt and (
+            "enter" in prompt.lower() or
+            "describe" in prompt.lower() or
+            "summarize" in prompt.lower() or
+            "list" in prompt.lower() or
+            "provide" in prompt.lower() or
+            "explain" in prompt.lower() or
+            "prompt" in prompt.lower()
+        ):
+            results.append({
+                "header": header,
+                "prompt": prompt,
+                "header_idx": i,
+                "prompt_idx": i+1
+            })
+            i += 2
+        else:
+            i += 1
+    return results
+
 class RCAGenerator:
     def __init__(self):
         self.config = config.llm_config
         self.template_path = Path("data/rca_template.docx")
         self.output_dir = Path(config.app_config['output_directory'])
+        self._template_prompts = None
+
+    def get_template_prompts(self):
+        """Lazily load and cache prompts from the template docx."""
+        if self._template_prompts is None:
+            if self.template_path.exists():
+                self._template_prompts = extract_template_prompts(self.template_path)
+            else:
+                self._template_prompts = []
+        return self._template_prompts
         
     async def generate_rca_analysis(self, 
                                    files: List[str], 
@@ -117,41 +160,80 @@ class RCAGenerator:
         return source_data
     
     async def _generate_analysis(self, source_data: Dict[str, Any], issue_description: str) -> Dict[str, Any]:
-        """Generate RCA analysis using LLM"""
+        """Generate RCA analysis using LLM, using prompts from the template if available"""
         try:
             # Prepare context for LLM
             context = self._prepare_llm_context(source_data, issue_description)
-            
+
+            # Use prompts from the template to guide LLM generation
+            prompts = self.get_template_prompts()
+            if prompts:
+                # Compose a section-by-section prompt for the LLM
+                prompt_sections = []
+                for section in prompts:
+                    prompt_sections.append(
+                        f"{section['header']}:\n{section['prompt']}\n"
+                    )
+                sectioned_prompt = "\n".join(prompt_sections)
+                full_prompt = (
+                    f"Based on the provided context and the following RCA template prompts, "
+                    f"generate a comprehensive Root Cause Analysis (RCA) report. "
+                    f"Respond in JSON with a key for each section header. "
+                    f"\n\nTEMPLATE PROMPTS:\n{sectioned_prompt}\n\nCONTEXT:\n{context}"
+                )
+            else:
+                # Fallback to default prompt
+                full_prompt = (
+                    f"Based on the provided context, generate a comprehensive Root Cause Analysis (RCA) report. "
+                    f"Structure your response as a JSON object with the following fields:\n"
+                    "{\n"
+                    "  \"executive_summary\": \"Brief summary of the issue and findings\",\n"
+                    "  \"problem_statement\": \"Clear statement of the problem\",\n"
+                    "  \"timeline\": \"Chronological sequence of events\",\n"
+                    "  \"root_cause\": \"Primary root cause identified\",\n"
+                    "  \"contributing_factors\": [\"List of contributing factors\"],\n"
+                    "  \"impact_assessment\": \"Assessment of impact\",\n"
+                    "  \"corrective_actions\": [\"List of immediate corrective actions\"],\n"
+                    "  \"preventive_measures\": [\"List of preventive measures for the future\"],\n"
+                    "  \"recommendations\": [\"List of recommendations\"],\n"
+                    "  \"escalation_needed\": \"true/false - whether escalation is needed\",\n"
+                    "  \"defect_tickets_needed\": \"true/false - whether defect tickets should be created\",\n"
+                    "  \"severity\": \"Critical/High/Medium/Low\",\n"
+                    "  \"priority\": \"P1/P2/P3/P4\"\n"
+                    "}\n"
+                    f"\nContext:\n{context}"
+                )
+
             # Generate analysis using configured LLM
             if self.config['default_llm'] == 'openai':
                 try:
-                    analysis = await self._generate_with_openai(context)
+                    analysis = await self._generate_with_openai(full_prompt)
                 except Exception as e:
                     logger.warning(f"OpenAI failed: {e}. Trying fallback...")
-                    analysis = await self._try_fallback_llms(['anthropic', 'openrouter'], context)
+                    analysis = await self._try_fallback_llms(['anthropic', 'openrouter'], full_prompt)
             elif self.config['default_llm'] == 'anthropic':
                 try:
-                    analysis = await self._generate_with_anthropic(context)
+                    analysis = await self._generate_with_anthropic(full_prompt)
                 except Exception as e:
                     logger.warning(f"Anthropic failed: {e}. Trying fallback...")
-                    analysis = await self._try_fallback_llms(['openrouter', 'openai'], context)
+                    analysis = await self._try_fallback_llms(['openrouter', 'openai'], full_prompt)
             elif self.config['default_llm'] == 'openrouter':
                 try:
-                    analysis = await self._generate_with_openrouter(context)
+                    analysis = await self._generate_with_openrouter(full_prompt)
                 except Exception as e:
                     logger.warning(f"OpenRouter failed: {e}. Trying fallback...")
-                    analysis = await self._try_fallback_llms(['anthropic', 'openai'], context)
+                    analysis = await self._try_fallback_llms(['anthropic', 'openai'], full_prompt)
             elif self.config['default_llm'] == 'llmproxy':
                 try:
-                    analysis = await self._generate_with_llmproxy(context)
+                    analysis = await self._generate_with_llmproxy(full_prompt)
                 except Exception as e:
                     logger.warning(f"LLM Proxy failed: {e}. Trying fallback...")
-                    analysis = await self._try_fallback_llms(['openai', 'anthropic', 'openrouter'], context)
+                    analysis = await self._try_fallback_llms(['openai', 'anthropic', 'openrouter'], full_prompt)
             else:
                 raise ValueError(f"Unsupported LLM: {self.config['default_llm']}")
-            
+
             return analysis
-            
+
         except Exception as e:
             logger.error(f"Failed to generate analysis: {e}")
             raise
