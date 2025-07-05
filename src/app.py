@@ -510,8 +510,38 @@ class RCAApp:
         # Use the LLM (OpenAI/Anthropic/etc.) to get a response
         try:
             from src.rca_generator import rca_generator
-            llm_response = await rca_generator._generate_with_openai(prompt)
-            return llm_response if isinstance(llm_response, str) else str(llm_response)
+            # Try the configured LLM, fallback to others if needed
+            llm_method = None
+            llm_name = rca_generator.config.get('default_llm', 'openai')
+            if llm_name == 'openai':
+                llm_method = rca_generator._generate_with_openai
+            elif llm_name == 'anthropic':
+                llm_method = rca_generator._generate_with_anthropic
+            elif llm_name == 'openrouter':
+                llm_method = rca_generator._generate_with_openrouter
+            elif llm_name == 'llmproxy':
+                llm_method = rca_generator._generate_with_llmproxy
+            else:
+                llm_method = rca_generator._generate_with_openai
+
+            try:
+                llm_response = await llm_method(prompt)
+                return llm_response if isinstance(llm_response, str) else str(llm_response)
+            except Exception as e:
+                logger.warning(f"Primary LLM failed in agentic chat: {e}. Trying fallback LLMs...")
+                # Try all LLMs in fallback order
+                fallback_order = ['openai', 'anthropic', 'openrouter', 'llmproxy']
+                for fallback in fallback_order:
+                    if fallback == llm_name:
+                        continue
+                    try:
+                        method = getattr(rca_generator, f"_generate_with_{fallback}")
+                        llm_response = await method(prompt)
+                        return llm_response if isinstance(llm_response, str) else str(llm_response)
+                    except Exception as fallback_e:
+                        logger.warning(f"Agentic chat fallback LLM {fallback} failed: {fallback_e}")
+                logger.error(f"All LLMs failed in agentic chat.")
+                return "Error: All LLM providers failed to generate a response. Please check your API keys, network, and quota."
         except Exception as e:
             logger.error(f"Agentic chat LLM error: {e}")
             return f"Error: {e}"
