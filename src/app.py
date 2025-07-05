@@ -186,40 +186,6 @@ class RCAApp:
 
     async def show_linked_issues_dialog(self, linked_issues, main_ticket=None):
         """Show a dialog with a checklist of linked issues for user to add, and always add the main ticket if confirmed"""
-        selected = set()
-        # By default, main ticket is always selected and will be added
-        if main_ticket:
-            selected.add(main_ticket)
-
-        # Use a list to store checkboxes so we can read their state on confirm
-        checkboxes = []
-
-        def on_change(issue_key, checked):
-            if checked:
-                selected.add(issue_key)
-            else:
-                selected.discard(issue_key)
-
-        async def on_confirm():
-            added = 0
-            # Always add the main ticket if not already present
-            if main_ticket and main_ticket not in self.jira_tickets:
-                self.jira_tickets.append(main_ticket)
-                added += 1
-            for issue in linked_issues:
-                if issue['key'] in selected and issue['key'] not in self.jira_tickets:
-                    self.jira_tickets.append(issue['key'])
-                    added += 1
-            self.update_tickets_display()
-            if added == 1 and main_ticket:
-                ui.notify(f"Added main Jira ticket: {main_ticket}", type='positive')
-            elif added > 0:
-                ui.notify(f"Added {added} Jira issues", type='positive')
-            else:
-                ui.notify("No new Jira issues added", type='info')
-            self.ticket_input.value = ''
-            dialog.close()
-
         dialog = ui.dialog().props('persistent')
         with dialog:
             ui.label('Add Linked Jira Issues').classes('text-lg font-semibold mb-2')
@@ -227,22 +193,39 @@ class RCAApp:
             # Show the main ticket as always checked and disabled
             if main_ticket:
                 ui.checkbox(f"{main_ticket} (Main ticket)", value=True).props('disable')
+            checkboxes = []
             for issue in linked_issues:
                 key = issue.get('key', '')
                 summary = issue.get('summary', '')
                 link_type = issue.get('link_type', '')
                 direction = issue.get('direction', '')
                 label = f"{key} ({link_type}, {direction}) - {summary}"
-                checkbox = ui.checkbox(label, value=False)
-                checkboxes.append((checkbox, key))
-                # Use a function factory to bind the key robustly
-                def make_on_change(issue_key):
-                    return lambda e: on_change(issue_key, e.value)
-                checkbox.on('update:model-value', make_on_change(key))
+                cb = ui.checkbox(label, value=False)
+                checkboxes.append((cb, key))
             with ui.row():
+                async def on_confirm():
+                    added = 0
+                    # Always add the main ticket if not already present
+                    if main_ticket and main_ticket not in self.jira_tickets:
+                        self.jira_tickets.append(main_ticket)
+                        added += 1
+                    # Read checkbox values for linked issues
+                    for cb, key in checkboxes:
+                        if cb.value and key not in self.jira_tickets:
+                            self.jira_tickets.append(key)
+                            added += 1
+                    self.update_tickets_display()
+                    if added == 1 and main_ticket:
+                        ui.notify(f"Added main Jira ticket: {main_ticket}", type='positive')
+                    elif added > 0:
+                        ui.notify(f"Added {added} Jira issues", type='positive')
+                    else:
+                        ui.notify("No new Jira issues added", type='info')
+                    self.ticket_input.value = ''
+                    dialog.close()
                 ui.button('Add Selected', on_click=on_confirm).props('color=primary')
                 ui.button('Cancel', on_click=dialog.close)
-        dialog.open()
+        await dialog.open()
     
     def update_files_display(self):
         """Update the files display"""
