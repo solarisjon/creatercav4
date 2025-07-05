@@ -353,16 +353,36 @@ class RCAApp:
                 template_sections = []
 
             shown_keys = set()
+            # Add synonym mapping for template fields
+            synonym_map = {
+                "customer": ["customer", "customer_name", "client", "account"],
+                "cases": ["cases", "case", "support_case", "support_cases", "tickets", "jira_tickets"],
+                "synopsis": ["synopsis", "summary", "executive_summary", "overview", "description"],
+            }
             if template_sections:
                 for section in template_sections:
                     header = section['header']
                     # Try to find a matching key in analysis (case-insensitive, underscores/space-insensitive)
                     norm_header = header.lower().replace(" ", "_")
                     key = None
+                    # Try direct match
                     for k in analysis.keys():
                         if k.lower().replace(" ", "_") == norm_header:
                             key = k
                             break
+                    # Try synonyms if direct match fails
+                    if key is None:
+                        for syn_header, syn_list in synonym_map.items():
+                            if norm_header == syn_header:
+                                for syn in syn_list:
+                                    for k in analysis.keys():
+                                        if k.lower().replace(" ", "_") == syn:
+                                            key = k
+                                            break
+                                    if key:
+                                        break
+                            if key:
+                                break
                     if key is not None and key not in shown_keys:
                         value = analysis.get(key)
                         shown_keys.add(key)
