@@ -477,6 +477,7 @@ class RCAApp:
 
     def read_executive_summary(self):
         """Read aloud the Executive Summary section if available."""
+        import json
         if not self.analysis_result or 'analysis' not in self.analysis_result:
             ui.notify("No analysis available. Please generate the RCA report first.", type='warning')
             return
@@ -496,6 +497,7 @@ class RCAApp:
 
     def read_problem_issue(self):
         """Read aloud the Problem Issue/Problem Summary section if available."""
+        import json
         if not self.analysis_result or 'analysis' not in self.analysis_result:
             ui.notify("No analysis available. Please generate the RCA report first.", type='warning')
             return
