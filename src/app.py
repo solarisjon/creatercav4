@@ -485,7 +485,14 @@ class RCAApp:
             ui.notify("Executive Summary not found in the analysis.", type='warning')
             return
         ui.notify("Reading Executive Summary...", type='info')
-        ui.speech(text=summary, lang='en-US')
+        # Use browser's SpeechSynthesis API via JavaScript
+        ui.run_javascript(f"""
+            if ('speechSynthesis' in window) {{
+                var utter = new window.SpeechSynthesisUtterance({json.dumps(summary)});
+                utter.lang = 'en-US';
+                window.speechSynthesis.speak(utter);
+            }}
+        """)
 
     def read_problem_issue(self):
         """Read aloud the Problem Issue/Problem Summary section if available."""
@@ -500,7 +507,14 @@ class RCAApp:
             ui.notify("Problem Issue/Problem Summary not found in the analysis.", type='warning')
             return
         ui.notify("Reading Problem Issue/Summary...", type='info')
-        ui.speech(text=problem, lang='en-US')
+        # Use browser's SpeechSynthesis API via JavaScript
+        ui.run_javascript(f"""
+            if ('speechSynthesis' in window) {{
+                var utter = new window.SpeechSynthesisUtterance({json.dumps(problem)});
+                utter.lang = 'en-US';
+                window.speechSynthesis.speak(utter);
+            }}
+        """)
 
     def reset_context(self):
         """Reset the context for a new RCA session (clears all files, URLs, tickets, and results)"""
