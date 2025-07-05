@@ -122,6 +122,16 @@ class RCAGenerator:
                 analysis["defect"] = defect_number
             # --- End inject ---
 
+            # Add a "sources_used" section to the analysis
+            sources_used = []
+            if files:
+                sources_used.extend([f"File: {Path(f).name}" for f in files])
+            if urls:
+                sources_used.extend([f"URL: {u}" for u in urls])
+            if jira_tickets:
+                sources_used.extend([f"Jira Ticket: {jt}" for jt in jira_tickets])
+            analysis["sources_used"] = sources_used
+
             # Create RCA document
             document_path = await self._create_rca_document(analysis)
             

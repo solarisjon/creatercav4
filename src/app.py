@@ -366,6 +366,14 @@ class RCAApp:
             except Exception:
                 template_sections = []
 
+            # Show sources used at the top
+            sources = analysis.get("sources_used")
+            if sources:
+                with ui.card().classes('w-full mb-4'):
+                    ui.label("Sources Used").classes('text-lg font-semibold mb-2')
+                    for src in sources:
+                        ui.markdown(f"- {src}")
+
             shown_keys = set()
             # Add synonym mapping for template fields
             synonym_map = {
