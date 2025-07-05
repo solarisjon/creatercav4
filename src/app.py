@@ -174,7 +174,7 @@ class RCAApp:
             logger.error(f"Failed to fetch linked issues for {ticket}: {e}")
             linked_issues = []
 
-        # If there are linked issues, show a checklist dialog BEFORE adding the main ticket
+        # Always show a dialog if there are linked issues, otherwise add the ticket directly
         if linked_issues:
             await self.show_linked_issues_dialog(linked_issues, main_ticket=ticket)
         else:
@@ -190,6 +190,9 @@ class RCAApp:
         # By default, main ticket is always selected and will be added
         if main_ticket:
             selected.add(main_ticket)
+
+        # Use a list to store checkboxes so we can read their state on confirm
+        checkboxes = []
 
         def on_change(issue_key, checked):
             if checked:
@@ -208,14 +211,19 @@ class RCAApp:
                     self.jira_tickets.append(issue['key'])
                     added += 1
             self.update_tickets_display()
-            ui.notify(f"Added {added} Jira issues", type='positive')
+            if added == 1 and main_ticket:
+                ui.notify(f"Added main Jira ticket: {main_ticket}", type='positive')
+            elif added > 0:
+                ui.notify(f"Added {added} Jira issues", type='positive')
+            else:
+                ui.notify("No new Jira issues added", type='info')
             self.ticket_input.value = ''
             dialog.close()
 
         dialog = ui.dialog().props('persistent')
         with dialog:
             ui.label('Add Linked Jira Issues').classes('text-lg font-semibold mb-2')
-            ui.markdown('Select linked issues to add for analysis. The main ticket will always be included.')
+            ui.markdown('This ticket has linked Jira issues. Select any you want to include in the RCA context. The main ticket will always be included.')
             # Show the main ticket as always checked and disabled
             if main_ticket:
                 ui.checkbox(f"{main_ticket} (Main ticket)", value=True).props('disable')
@@ -225,7 +233,9 @@ class RCAApp:
                 link_type = issue.get('link_type', '')
                 direction = issue.get('direction', '')
                 label = f"{key} ({link_type}, {direction}) - {summary}"
-                checkbox = ui.checkbox(label)
+                checkbox = ui.checkbox(label, value=False)
+                checkboxes.append((checkbox, key))
+                # Use a closure to bind the key
                 checkbox.on('update:model-value', lambda e, k=key: on_change(k, e.value))
             with ui.row():
                 ui.button('Add Selected', on_click=on_confirm).props('color=primary')
