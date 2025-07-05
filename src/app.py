@@ -41,81 +41,84 @@ class RCAApp:
             ui.notify("Failed to initialize MCP client", type='negative')
     
     def create_ui(self):
-        """Create the NiceGUI interface"""
+        """Create the NiceGUI interface with NetApp branding"""
         # Set page title and favicon
-        ui.page_title(self.config['title'])
-        
+        ui.page_title("NetApp RCA Tool")
+        ui.add_head_html("""
+        <link rel="icon" type="image/png" href="https://www.netapp.com/wp-content/uploads/2021/05/cropped-netapp-favicon-32x32.png">
+        <style>
+            body { background: #f7f9fa; }
+            .netapp-header { background: #0067c5; color: white; border-radius: 8px; }
+            .netapp-logo { height: 48px; margin-right: 18px; }
+            .netapp-title { font-size: 2.2rem; font-weight: 700; letter-spacing: 1px; }
+            .netapp-subtitle { font-size: 1.1rem; color: #e3eaf2; }
+            .netapp-card { border: 1px solid #e3eaf2; border-radius: 8px; background: white; }
+            .netapp-btn-primary { background: #0067c5 !important; color: white !important; }
+            .netapp-btn-secondary { background: #e3eaf2 !important; color: #0067c5 !important; }
+        </style>
+        """)
+
         # Main container
-        with ui.column().classes('w-full max-w-6xl mx-auto p-4'):
-            # Header
-            with ui.row().classes('w-full items-center mb-6'):
-                ui.icon('analytics', size='2em').classes('text-blue-600')
-                ui.label(self.config['title']).classes('text-3xl font-bold text-gray-800')
-            
+        with ui.column().classes('w-full max-w-4xl mx-auto p-4'):
+            # NetApp Header
+            with ui.row().classes('w-full items-center mb-6 netapp-header p-4'):
+                ui.image('https://www.netapp.com/wp-content/uploads/2021/05/netapp-logo.png').classes('netapp-logo')
+                ui.label('Root Cause Analysis Tool').classes('netapp-title')
+                ui.label('Powered by MCP & LLM').classes('ml-4 netapp-subtitle')
+
             # Instructions
-            with ui.card().classes('w-full mb-6'):
-                ui.label('Instructions').classes('text-xl font-semibold mb-2')
+            with ui.card().classes('w-full mb-6 netapp-card'):
+                ui.label('Instructions').classes('text-xl font-semibold mb-2 text-[#0067c5]')
                 ui.markdown("""
                 1. **Upload Files**: Add support case PDFs, documentation, logs, etc.
-                2. **Add URLs**: Include links to Confluence pages, documentation, or other web resources
-                3. **Reference Jira Tickets**: Add existing ticket IDs for context
-                4. **Describe Issue**: Provide a clear description of the problem
-                5. **Generate Analysis**: Click to create the comprehensive RCA report
+                2. **Add URLs**: Include links to Confluence pages, documentation, or other web resources.
+                3. **Reference Jira Tickets**: Add existing ticket IDs for context.
+                4. **Describe Issue**: Provide a clear description of the problem.
+                5. **Generate Analysis**: Click to create the comprehensive RCA report.
                 """)
-            
+
             # File Upload Section
-            with ui.card().classes('w-full mb-4'):
-                ui.label('File Upload').classes('text-lg font-semibold mb-2')
+            with ui.card().classes('w-full mb-4 netapp-card'):
+                ui.label('File Upload').classes('text-lg font-semibold mb-2 text-[#0067c5]')
                 ui.upload(
                     on_upload=self.handle_file_upload,
                     multiple=True,
                     max_file_size=self.config['max_file_size_mb'] * 1024 * 1024
                 ).classes('w-full').props('accept=".pdf,.txt,.docx,.md"')
-                
-                # Display uploaded files
                 self.files_list = ui.column().classes('mt-2')
                 self.update_files_display()
-            
+
             # URLs Section
-            with ui.card().classes('w-full mb-4'):
-                ui.label('Web Resources').classes('text-lg font-semibold mb-2')
+            with ui.card().classes('w-full mb-4 netapp-card'):
+                ui.label('Web Resources').classes('text-lg font-semibold mb-2 text-[#0067c5]')
                 with ui.row().classes('w-full'):
                     self.url_input = ui.input('Enter URL').classes('flex-grow')
-                    ui.button('Add URL', on_click=self.add_url).classes('ml-2')
-                
-                # Display URLs
+                    ui.button('Add URL', on_click=self.add_url).classes('ml-2 netapp-btn-secondary')
                 self.urls_list = ui.column().classes('mt-2')
                 self.update_urls_display()
-            
+
             # Jira Tickets Section
-            with ui.card().classes('w-full mb-4'):
-                ui.label('Jira Tickets').classes('text-lg font-semibold mb-2')
+            with ui.card().classes('w-full mb-4 netapp-card'):
+                ui.label('Jira Tickets').classes('text-lg font-semibold mb-2 text-[#0067c5]')
                 with ui.row().classes('w-full'):
                     self.ticket_input = ui.input('Enter Jira Ticket ID (e.g., CPE-1234)').classes('flex-grow')
-                    ui.button('Add Ticket', on_click=lambda: self.add_jira_ticket()).classes('ml-2')
-                
-                # Display Jira tickets
+                    ui.button('Add Ticket', on_click=lambda: self.add_jira_ticket()).classes('ml-2 netapp-btn-secondary')
                 self.tickets_list = ui.column().classes('mt-2')
                 self.update_tickets_display()
-            
+
             # Issue Description Section
-            with ui.card().classes('w-full mb-4'):
-                ui.label('Issue Description').classes('text-lg font-semibold mb-2')
+            with ui.card().classes('w-full mb-4 netapp-card'):
+                ui.label('Issue Description').classes('text-lg font-semibold mb-2 text-[#0067c5]')
                 self.issue_description = ui.textarea('Describe the issue that needs root cause analysis...').classes('w-full')
-            
+
             # Analysis Section
-            with ui.card().classes('w-full mb-4'):
-                ui.label('Generate Analysis').classes('text-lg font-semibold mb-2')
-                
+            with ui.card().classes('w-full mb-4 netapp-card'):
+                ui.label('Generate Analysis').classes('text-lg font-semibold mb-2 text-[#0067c5]')
                 with ui.row().classes('w-full'):
-                    ui.button('Generate RCA Report', on_click=self.generate_analysis).classes('bg-blue-600 text-white')
-                    ui.button('Clear All', on_click=self.clear_all).classes('bg-gray-500 text-white ml-2')
-                
-                # Progress indicator
+                    ui.button('Generate RCA Report', on_click=self.generate_analysis).classes('netapp-btn-primary')
+                    ui.button('Clear All', on_click=self.clear_all).classes('ml-2 netapp-btn-secondary')
                 self.progress_bar = ui.linear_progress(value=0).classes('w-full mt-2')
                 self.progress_bar.visible = False
-                
-                # Analysis results
                 self.results_container = ui.column().classes('w-full mt-4')
     
     def handle_file_upload(self, e):
