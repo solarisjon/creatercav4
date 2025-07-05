@@ -693,16 +693,18 @@ class RCAGenerator:
                 return str(val)
 
             # Fill in the template by replacing prompts with analysis content
-            for para in doc.paragraphs:
+            # Avoid using doc.paragraphs.index(para) due to possible duplicate paragraph objects
+            section_headers_flat = [h for hs in section_map.values() for h in hs]
+            i = 0
+            while i < len(doc.paragraphs):
+                para = doc.paragraphs[i]
                 for key, headers in section_map.items():
                     for header in headers:
-                        # If the paragraph text matches a header, fill the next paragraph(s)
                         if para.text.strip().lower() == header.lower():
-                            # Find the next non-header paragraph (the prompt) and replace it
-                            idx = doc.paragraphs.index(para)
                             # Look ahead for the prompt paragraph
-                            for next_para in doc.paragraphs[idx+1:]:
-                                # If next_para is empty or looks like a prompt, replace it
+                            j = i + 1
+                            while j < len(doc.paragraphs):
+                                next_para = doc.paragraphs[j]
                                 if next_para.text.strip() and (
                                     "enter" in next_para.text.lower() or
                                     "describe" in next_para.text.lower() or
@@ -714,9 +716,10 @@ class RCAGenerator:
                                 ):
                                     next_para.text = get_section_content(key)
                                     break
-                                # If we hit another header, stop
-                                if next_para.text.strip() in [h for hs in section_map.values() for h in hs]:
+                                if next_para.text.strip() in section_headers_flat:
                                     break
+                                j += 1
+                i += 1
 
             # Save the filled document
             doc.save(output_file)
