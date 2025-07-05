@@ -174,19 +174,22 @@ class RCAApp:
             logger.error(f"Failed to fetch linked issues for {ticket}: {e}")
             linked_issues = []
 
-        # Add the main ticket
-        self.jira_tickets.append(ticket)
-        self.update_tickets_display()
-        ui.notify(f'Jira ticket added: {ticket}', type='positive')
-        self.ticket_input.value = ''
-
-        # If there are linked issues, show a checklist dialog
+        # If there are linked issues, show a checklist dialog BEFORE adding the main ticket
         if linked_issues:
-            await self.show_linked_issues_dialog(linked_issues)
+            await self.show_linked_issues_dialog(linked_issues, main_ticket=ticket)
+        else:
+            # Add the main ticket if no linked issues
+            self.jira_tickets.append(ticket)
+            self.update_tickets_display()
+            ui.notify(f'Jira ticket added: {ticket}', type='positive')
+            self.ticket_input.value = ''
 
-    async def show_linked_issues_dialog(self, linked_issues):
-        """Show a dialog with a checklist of linked issues for user to add"""
+    async def show_linked_issues_dialog(self, linked_issues, main_ticket=None):
+        """Show a dialog with a checklist of linked issues for user to add, and always add the main ticket if confirmed"""
         selected = set()
+        # By default, main ticket is always selected and will be added
+        if main_ticket:
+            selected.add(main_ticket)
 
         def on_change(issue_key, checked):
             if checked:
@@ -196,18 +199,26 @@ class RCAApp:
 
         async def on_confirm():
             added = 0
+            # Always add the main ticket if not already present
+            if main_ticket and main_ticket not in self.jira_tickets:
+                self.jira_tickets.append(main_ticket)
+                added += 1
             for issue in linked_issues:
                 if issue['key'] in selected and issue['key'] not in self.jira_tickets:
                     self.jira_tickets.append(issue['key'])
                     added += 1
             self.update_tickets_display()
-            ui.notify(f"Added {added} linked Jira issues", type='positive')
+            ui.notify(f"Added {added} Jira issues", type='positive')
+            self.ticket_input.value = ''
             dialog.close()
 
         dialog = ui.dialog().props('persistent')
         with dialog:
             ui.label('Add Linked Jira Issues').classes('text-lg font-semibold mb-2')
-            ui.markdown('Select linked issues to add for analysis:')
+            ui.markdown('Select linked issues to add for analysis. The main ticket will always be included.')
+            # Show the main ticket as always checked and disabled
+            if main_ticket:
+                ui.checkbox(f"{main_ticket} (Main ticket)", value=True).props('disable')
             for issue in linked_issues:
                 key = issue.get('key', '')
                 summary = issue.get('summary', '')
