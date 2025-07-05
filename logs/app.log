@@ -1,0 +1,44 @@
+2025-07-05 10:00:20,357 - __main__ - INFO - Starting MCP-based RCA Tool
+2025-07-05 10:00:20,357 - __main__ - ERROR - Failed to start application: 'module' object is not callable
+2025-07-05 10:01:25,179 - __main__ - INFO - Starting MCP-based RCA Tool
+2025-07-05 10:01:25,179 - __main__ - ERROR - Failed to start application: 'module' object is not callable
+2025-07-05 10:01:36,517 - __main__ - INFO - Starting MCP-based RCA Tool
+2025-07-05 10:01:36,517 - __main__ - ERROR - Failed to start application: 'module' object is not callable
+2025-07-05 10:01:48,599 - __main__ - INFO - Starting MCP-based RCA Tool
+2025-07-05 10:01:48,599 - __main__ - ERROR - Failed to start application: 'module' object is not callable
+2025-07-05 10:07:09,556 - __main__ - INFO - Starting MCP-based RCA Tool
+2025-07-05 10:09:22,811 - __main__ - INFO - Starting MCP-based RCA Tool
+2025-07-05 10:10:56,056 - __main__ - INFO - Starting MCP-based RCA Tool
+2025-07-05 10:13:18,127 - __main__ - INFO - Starting MCP-based RCA Tool
+2025-07-05 10:15:38,729 - __main__ - INFO - Starting MCP-based RCA Tool
+2025-07-05 10:15:38,807 - __main__ - INFO - Starting server on 0.0.0.0:8090
+2025-07-05 10:15:38,834 - src.app - INFO - MCP client initialized successfully
+2025-07-05 10:15:39,103 - src.app - INFO - MCP client initialized successfully
+2025-07-05 10:21:41,168 - src.app - INFO - MCP client initialized successfully
+2025-07-05 10:22:40,970 - src.utils.file_handler - INFO - File saved: uploads/NFS_Performance_Escalation_Report.pdf
+2025-07-05 10:22:40,971 - src.app - INFO - File uploaded successfully: uploads/NFS_Performance_Escalation_Report.pdf
+2025-07-05 10:22:40,974 - src.utils.file_handler - INFO - File saved: uploads/NFS_Performance_Support_Case.pdf
+2025-07-05 10:22:40,975 - src.app - INFO - File uploaded successfully: uploads/NFS_Performance_Support_Case.pdf
+2025-07-05 10:22:49,386 - src.app - ERROR - Error generating analysis: Error code: 429 - {'error': {'message': 'You exceeded your current quota, please check your plan and billing details. For more information on this error, read the docs: https://platform.openai.com/docs/guides/error-codes/api-errors.', 'type': 'insufficient_quota', 'param': None, 'code': 'insufficient_quota'}}
+2025-07-05 10:23:08,653 - src.app - ERROR - Error generating analysis: Error code: 429 - {'error': {'message': 'You exceeded your current quota, please check your plan and billing details. For more information on this error, read the docs: https://platform.openai.com/docs/guides/error-codes/api-errors.', 'type': 'insufficient_quota', 'param': None, 'code': 'insufficient_quota'}}
+2025-07-05 10:23:20,527 - src.app - ERROR - Error generating analysis: Error code: 429 - {'error': {'message': 'You exceeded your current quota, please check your plan and billing details. For more information on this error, read the docs: https://platform.openai.com/docs/guides/error-codes/api-errors.', 'type': 'insufficient_quota', 'param': None, 'code': 'insufficient_quota'}}
+2025-07-05 10:24:33,797 - src.app - INFO - MCP client initialized successfully
+2025-07-05 10:25:04,058 - src.app - ERROR - Error generating analysis: Expecting value: line 1 column 1 (char 0)
+2025-07-05 10:25:21,344 - __main__ - INFO - Starting MCP-based RCA Tool
+2025-07-05 10:25:21,419 - __main__ - INFO - Starting server on 0.0.0.0:8090
+2025-07-05 10:25:21,440 - src.app - INFO - MCP client initialized successfully
+2025-07-05 10:25:21,635 - src.app - INFO - MCP client initialized successfully
+2025-07-05 10:25:29,672 - src.utils.file_handler - INFO - File saved: uploads/NFS_Performance_Support_Case_1.pdf
+2025-07-05 10:25:29,673 - src.app - INFO - File uploaded successfully: uploads/NFS_Performance_Support_Case_1.pdf
+2025-07-05 10:25:29,674 - src.utils.file_handler - INFO - File saved: uploads/NFS_Performance_Escalation_Report_1.pdf
+2025-07-05 10:25:29,675 - src.app - INFO - File uploaded successfully: uploads/NFS_Performance_Escalation_Report_1.pdf
+2025-07-05 10:25:51,267 - src.app - ERROR - Error generating analysis: Expecting value: line 1 column 1 (char 0)
+2025-07-05 10:29:43,805 - src.app - INFO - MCP client initialized successfully
+2025-07-05 10:30:27,337 - __main__ - INFO - Starting MCP-based RCA Tool
+2025-07-05 10:30:27,431 - __main__ - INFO - Starting server on 0.0.0.0:8090
+2025-07-05 10:30:27,456 - src.app - INFO - MCP client initialized successfully
+2025-07-05 10:30:27,652 - src.app - INFO - MCP client initialized successfully
+2025-07-05 10:30:35,657 - src.utils.file_handler - INFO - File saved: uploads/NFS_Performance_Escalation_Report_2.pdf
+2025-07-05 10:30:35,659 - src.app - INFO - File uploaded successfully: uploads/NFS_Performance_Escalation_Report_2.pdf
+2025-07-05 10:30:35,660 - src.utils.file_handler - INFO - File saved: uploads/NFS_Performance_Support_Case_2.pdf
+2025-07-05 10:30:35,661 - src.app - INFO - File uploaded successfully: uploads/NFS_Performance_Support_Case_2.pdf
