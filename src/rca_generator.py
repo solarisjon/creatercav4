@@ -86,7 +86,42 @@ class RCAGenerator:
             
             # Generate analysis using LLM
             analysis = await self._generate_analysis(source_data, issue_description)
-            
+
+            # --- Inject key fields for template mapping ---
+            # 1. Case: look for a support case number (SAP case) in files or filenames
+            case_number = None
+            for file_path in files:
+                # Try to match a long number (e.g., 201012345678)
+                import re
+                match = re.search(r'\b(20\d{10,})\b', file_path)
+                if match:
+                    case_number = match.group(1)
+                    break
+            # 2. CPE: first Jira ticket that matches CPE-xxxx
+            cpe_number = None
+            for ticket in jira_tickets:
+                if ticket.upper().startswith("CPE-"):
+                    cpe_number = ticket
+                    break
+            # 3. Defect: first linked issue that matches CONTAP-xxxxxx or ELEM-xxxxxx
+            defect_number = None
+            for linked_list in source_data.get("jira_linked_issues", {}).values():
+                for issue in linked_list:
+                    key = issue.get("key", "")
+                    if key.startswith("CONTAP-") or key.startswith("ELEM-"):
+                        defect_number = key
+                        break
+                if defect_number:
+                    break
+            # Add to analysis if not already present
+            if "case" not in analysis and case_number:
+                analysis["case"] = case_number
+            if "cpe" not in analysis and cpe_number:
+                analysis["cpe"] = cpe_number
+            if "defect" not in analysis and defect_number:
+                analysis["defect"] = defect_number
+            # --- End inject ---
+
             # Create RCA document
             document_path = await self._create_rca_document(analysis)
             
