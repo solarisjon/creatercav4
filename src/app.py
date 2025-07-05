@@ -235,8 +235,10 @@ class RCAApp:
                 label = f"{key} ({link_type}, {direction}) - {summary}"
                 checkbox = ui.checkbox(label, value=False)
                 checkboxes.append((checkbox, key))
-                # Use a closure to bind the key
-                checkbox.on('update:model-value', lambda e, k=key: on_change(k, e.value))
+                # Use a function factory to bind the key robustly
+                def make_on_change(issue_key):
+                    return lambda e: on_change(issue_key, e.value)
+                checkbox.on('update:model-value', make_on_change(key))
             with ui.row():
                 ui.button('Add Selected', on_click=on_confirm).props('color=primary')
                 ui.button('Cancel', on_click=dialog.close)
