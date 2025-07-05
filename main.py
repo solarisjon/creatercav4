@@ -9,6 +9,8 @@ import argparse
 from src.utils.logger import setup_logger
 from src.config import config
 from nicegui import ui
+import platform
+import os
 
 # Setup logging
 logger = setup_logger(__name__)
@@ -58,4 +60,16 @@ def main():
         sys.exit(1)
 
 if __name__ == "__main__":
+    # Set the path for the PEM file used for SSL certificate verification
+    platformtype = platform.system()
+
+    if platformtype == "Linux":
+        os.environ['REQUESTS_CA_BUNDLE'] = "/etc/ssl/certs/ca-certificates.crt"
+        os.environ['SSL_CERT_FILE']      = "/etc/ssl/certs/ca-certificates.crt"
+    elif platformtype == "Darwin":
+        pem_path = "/usr/local/etc/openssl@3/certs/../cert.pem"
+        os.environ['REQUESTS_CA_BUNDLE'] = pem_path
+        os.environ['SSL_CERT_FILE'] = pem_path
+    else:
+        print("Unsupported platform. Please set the SSL_CERT_FILE environment variable manually.")
     main()
