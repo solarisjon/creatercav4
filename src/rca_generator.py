@@ -313,27 +313,27 @@ class RCAGenerator:
             "SOURCE DATA ANALYSIS:\n"
         ]
         
-        # Add file contents
+        # Add file contents (increase content length limit)
         if source_data['files']:
             context_parts.append("FILES ANALYZED:")
             for file_path, file_data in source_data['files'].items():
                 if 'content' in file_data:
                     context_parts.append(f"\n--- {file_path} ---")
-                    context_parts.append(file_data['content'][:5000])  # Limit content length
-                    if len(file_data['content']) > 5000:
+                    context_parts.append(file_data['content'][:20000])  # Increased content length
+                    if len(file_data['content']) > 20000:
                         context_parts.append("... (content truncated)")
                 else:
                     context_parts.append(f"\n--- {file_path} (ERROR) ---")
                     context_parts.append(file_data.get('error', 'Unknown error'))
         
-        # Add URL contents
+        # Add URL contents (increase content length limit)
         if source_data['urls']:
             context_parts.append("\n\nWEB CONTENT ANALYZED:")
             for url, url_data in source_data['urls'].items():
                 if 'content' in url_data:
                     context_parts.append(f"\n--- {url} ---")
-                    context_parts.append(url_data['content'][:3000])  # Limit content length
-                    if len(url_data['content']) > 3000:
+                    context_parts.append(url_data['content'][:10000])  # Increased content length
+                    if len(url_data['content']) > 10000:
                         context_parts.append("... (content truncated)")
                 else:
                     context_parts.append(f"\n--- {url} (ERROR) ---")
