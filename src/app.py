@@ -248,7 +248,7 @@ class RCAApp:
                         dialog.close()
                     ui.button('Add Selected', on_click=on_confirm).props('color=primary').classes('min-w-0 px-2 py-1 text-xs')
                     ui.button('Cancel', on_click=dialog.close).classes('min-w-0 px-2 py-1 text-xs')
-        await dialog.open()
+        dialog.open()
     
     def update_files_display(self):
         """Update the files display"""
