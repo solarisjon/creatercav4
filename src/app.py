@@ -120,6 +120,11 @@ class RCAApp:
                 self.progress_bar.visible = False
                 self.results_container = ui.column().classes('w-full mt-4')
 
+                # Add buttons to read Executive Summary and Problem Issue sections
+                with ui.row().classes('w-full mt-2'):
+                    ui.button('Read Executive Summary', on_click=self.read_executive_summary).classes('netapp-btn-secondary')
+                    ui.button('Read Problem Issue', on_click=self.read_problem_issue).classes('ml-2 netapp-btn-secondary')
+
             # Chat/Agentic RCA Refinement Section
             with ui.card().classes('w-full mb-4 netapp-card'):
                 ui.label('RCA Agentic Chat & Deep Analysis').classes('text-lg font-semibold mb-2 text-[#0067c5]')
@@ -469,6 +474,33 @@ class RCAApp:
         self.results_container.clear()
         
         ui.notify('All data cleared', type='info')
+
+    def read_executive_summary(self):
+        """Read aloud the Executive Summary section if available."""
+        if not self.analysis_result or 'analysis' not in self.analysis_result:
+            ui.notify("No analysis available. Please generate the RCA report first.", type='warning')
+            return
+        summary = self.analysis_result['analysis'].get('executive_summary')
+        if not summary:
+            ui.notify("Executive Summary not found in the analysis.", type='warning')
+            return
+        ui.notify("Reading Executive Summary...", type='info')
+        ui.speech(text=summary, lang='en-US')
+
+    def read_problem_issue(self):
+        """Read aloud the Problem Issue/Problem Summary section if available."""
+        if not self.analysis_result or 'analysis' not in self.analysis_result:
+            ui.notify("No analysis available. Please generate the RCA report first.", type='warning')
+            return
+        # Try both 'problem_issue' and 'problem_summary' keys for compatibility
+        problem = self.analysis_result['analysis'].get('problem_issue') \
+            or self.analysis_result['analysis'].get('problem_summary') \
+            or self.analysis_result['analysis'].get('problem_statement')
+        if not problem:
+            ui.notify("Problem Issue/Problem Summary not found in the analysis.", type='warning')
+            return
+        ui.notify("Reading Problem Issue/Summary...", type='info')
+        ui.speech(text=problem, lang='en-US')
 
     def reset_context(self):
         """Reset the context for a new RCA session (clears all files, URLs, tickets, and results)"""
