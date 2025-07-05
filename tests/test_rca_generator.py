@@ -1,8 +1,62 @@
 import pytest
 import json
+import os
+from pathlib import Path
 from unittest.mock import Mock, AsyncMock, patch, MagicMock
 from src.rca_generator import RCAGenerator
 from src.config import Config
+
+@pytest.mark.asyncio
+async def test_create_rca_document_word(tmp_path):
+    """Test that _create_rca_document fills a Word template and saves output"""
+    from docx import Document
+    # Create a minimal Word template with expected headers and prompts
+    headers = [
+        "Executive Summary", "Problem Statement", "Timeline", "Root Cause",
+        "Contributing Factors", "Impact Assessment", "Corrective Actions",
+        "Preventive Measures", "Recommendations", "Escalation Needed",
+        "Defect Tickets Needed", "Severity", "Priority"
+    ]
+    template = Document()
+    for header in headers:
+        template.add_paragraph(header)
+        template.add_paragraph(f"Enter {header.lower()} here.")
+    template_path = tmp_path / "rca_template_doc.docx"
+    template.save(template_path)
+
+    # Patch RCAGenerator to use our temp template/output dir
+    gen = RCAGenerator()
+    gen.template_path = template_path
+    gen.output_dir = tmp_path
+
+    # Minimal analysis dict
+    analysis = {
+        "executive_summary": "Summary goes here.",
+        "problem_statement": "Problem statement here.",
+        "timeline": "Timeline here.",
+        "root_cause": "Root cause here.",
+        "contributing_factors": ["Factor 1", "Factor 2"],
+        "impact_assessment": "Impact assessment here.",
+        "corrective_actions": ["Action 1"],
+        "preventive_measures": ["Measure 1"],
+        "recommendations": ["Recommendation 1"],
+        "escalation_needed": True,
+        "defect_tickets_needed": False,
+        "severity": "High",
+        "priority": "P1"
+    }
+
+    output_path = await gen._create_rca_document(analysis)
+    assert output_path.exists()
+    assert output_path.suffix == ".docx"
+
+    # Check that the output docx contains the filled-in content
+    doc = Document(output_path)
+    found_summary = False
+    for para in doc.paragraphs:
+        if para.text.strip() == "Summary goes here.":
+            found_summary = True
+    assert found_summary
 
 class TestRCAGenerator:
     @pytest.fixture
