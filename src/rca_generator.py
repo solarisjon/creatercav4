@@ -237,27 +237,17 @@ class RCAGenerator:
         return source_data
     
     async def _generate_analysis(self, source_data: Dict[str, Any], issue_description: str) -> Dict[str, Any]:
-        """Generate RCA analysis using LLM, using prompts from the template if available"""
+        """Generate RCA analysis using LLM, using the formal prompt from src/prompts/formal_rca_prompt"""
         try:
             # Prepare context for LLM
             context = self._prepare_llm_context(source_data, issue_description)
 
-            # Use prompts from the template to guide LLM generation
-            prompts = self.get_template_prompts()
-            if prompts:
-                # Compose a section-by-section prompt for the LLM
-                prompt_sections = []
-                for section in prompts:
-                    prompt_sections.append(
-                        f"{section['header']}:\n{section['prompt']}\n"
-                    )
-                sectioned_prompt = "\n".join(prompt_sections)
-                full_prompt = (
-                    f"Based on the provided context and the following RCA template prompts, "
-                    f"generate a comprehensive Root Cause Analysis (RCA) report. "
-                    f"Respond in JSON with a key for each section header. "
-                    f"\n\nTEMPLATE PROMPTS:\n{sectioned_prompt}\n\nCONTEXT:\n{context}"
-                )
+            # Load the formal RCA prompt from file
+            prompt_path = Path("src/prompts/formal_rca_prompt")
+            if prompt_path.exists():
+                with open(prompt_path, "r", encoding="utf-8") as f:
+                    base_prompt = f.read().strip()
+                full_prompt = f"{base_prompt}\n\n{context}"
             else:
                 # Fallback to default prompt
                 full_prompt = (
