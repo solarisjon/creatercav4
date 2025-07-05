@@ -752,11 +752,47 @@ class RCAGenerator:
                     "prompt_idx": prompt_idx
                 }
 
-            # For each header, try to find a matching key in analysis (case-insensitive, underscores/space-insensitive)
+            # Improved: Use a synonym map and fuzzy matching to map headers to analysis keys
             def find_analysis_key(header):
                 norm_header = header.lower().replace(" ", "_")
+                synonym_map = {
+                    "customer": ["customer", "customer_name", "client", "account"],
+                    "cases": ["cases", "case", "case_number", "support_case", "support_cases", "tickets", "jira_tickets"],
+                    "synopsis": ["synopsis", "summary", "executive_summary", "overview", "description"],
+                    "issue_tracking_number": ["issue_tracking_number", "case", "case_number", "cases", "support_case", "sap_case", "tracking_number"],
+                    "cpe": ["cpe", "cpe_number"],
+                    "defect": ["defect", "defect_ids", "defects", "related_defects"],
+                    "cap_color": ["cap_color", "cap", "color"],
+                    "timeline": ["timeline"],
+                    "executive_summary": ["executive_summary", "summary", "overview"],
+                    "problem_summary": ["problem_summary", "problem_statement", "problem", "issue_summary"],
+                    "impact": ["impact", "impact_assessment"],
+                    "root_cause": ["root_cause", "cause"],
+                    "likelihood_of_occurrence": ["likelihood_of_occurrence", "likelihood", "probability"],
+                    "vulnerability": ["vulnerability", "vulnerabilities"],
+                    "overall_risk_profile": ["overall_risk_profile", "risk_profile", "risk"],
+                    "workaround": ["workaround", "workarounds"],
+                    "known_defects_and_resolution": ["known_defects_and_resolution", "known_defects", "defect_resolution"],
+                    "new_defects_and_resolution": ["new_defects_and_resolution", "new_defects"],
+                    "recommended_changes": ["recommended_changes", "recommendations", "recommended_system_changes"],
+                    "prevention_current": ["prevention_current", "prevention", "current_prevention"],
+                    "prevention_future": ["prevention_future", "future_prevention"],
+                    "monitoring": ["monitoring", "monitor", "monitor_for_prevention"],
+                }
+                # Try direct match
                 for k in analysis.keys():
                     if k.lower().replace(" ", "_") == norm_header:
+                        return k
+                # Try synonyms
+                for syn_header, syn_list in synonym_map.items():
+                    if norm_header == syn_header:
+                        for syn in syn_list:
+                            for k in analysis.keys():
+                                if k.lower().replace(" ", "_") == syn:
+                                    return k
+                # Try partial/fuzzy match
+                for k in analysis.keys():
+                    if norm_header in k.lower().replace(" ", "_") or k.lower().replace(" ", "_") in norm_header:
                         return k
                 return None
 
