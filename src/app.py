@@ -548,6 +548,7 @@ class RCAApp:
 
     def update_chat_history(self):
         """Update the chat message display in the UI."""
+        import json
         if hasattr(self, "chat_history"):
             self.chat_history.clear()
             for msg in self.chat_messages:
@@ -556,7 +557,27 @@ class RCAApp:
                         ui.markdown(f"**You:** {msg['content']}").classes('text-right text-blue-800')
                 else:
                     with self.chat_history:
-                        ui.markdown(f"**Agent:** {msg['content']}").classes('text-left text-gray-800')
+                        # Try to pretty-print JSON if the agent's response is JSON
+                        content = msg['content']
+                        formatted = None
+                        try:
+                            # Try to parse as JSON object or array
+                            parsed = json.loads(content)
+                            formatted = "```json\n" + json.dumps(parsed, indent=2, ensure_ascii=False) + "\n```"
+                        except Exception:
+                            # Try to extract JSON from within text
+                            import re
+                            match = re.search(r'(\{.*\}|\[.*\])', content, re.DOTALL)
+                            if match:
+                                try:
+                                    parsed = json.loads(match.group(1))
+                                    formatted = "```json\n" + json.dumps(parsed, indent=2, ensure_ascii=False) + "\n```"
+                                except Exception:
+                                    pass
+                        if formatted:
+                            ui.markdown(f"**Agent:**\n{formatted}").classes('text-left text-gray-800')
+                        else:
+                            ui.markdown(f"**Agent:** {content}").classes('text-left text-gray-800')
 
     def handle_chat_message(self):
         """Handle user chat input and update the chat history."""
