@@ -138,6 +138,12 @@ class RCAGenerator:
                 except Exception as e:
                     logger.warning(f"OpenRouter failed: {e}. Trying fallback...")
                     analysis = await self._try_fallback_llms(['anthropic', 'openai'], context)
+            elif self.config['default_llm'] == 'llmproxy':
+                try:
+                    analysis = await self._generate_with_llmproxy(context)
+                except Exception as e:
+                    logger.warning(f"LLM Proxy failed: {e}. Trying fallback...")
+                    analysis = await self._try_fallback_llms(['openai', 'anthropic', 'openrouter'], context)
             else:
                 raise ValueError(f"Unsupported LLM: {self.config['default_llm']}")
             
@@ -433,6 +439,84 @@ class RCAGenerator:
             logger.error(f"Failed to generate analysis with OpenRouter: {e}")
             raise
     
+    async def _generate_with_llmproxy(self, context: str) -> Dict[str, Any]:
+        """Generate analysis using LLM Proxy (OpenAI-compatible)"""
+        try:
+            import openai
+            
+            client = openai.AsyncOpenAI(
+                api_key=self.config['llmproxy_api_key'],
+                base_url=self.config['llmproxy_base_url']
+            )
+            
+            prompt = f"""
+            Based on the provided context, generate a comprehensive Root Cause Analysis (RCA) report. 
+            Structure your response as a JSON object with the following fields:
+            
+            {{
+                "executive_summary": "Brief summary of the issue and findings",
+                "problem_statement": "Clear statement of the problem",
+                "timeline": "Chronological sequence of events",
+                "root_cause": "Primary root cause identified",
+                "contributing_factors": ["List of contributing factors"],
+                "impact_assessment": "Assessment of impact",
+                "corrective_actions": ["List of immediate corrective actions"],
+                "preventive_measures": ["List of preventive measures for the future"],
+                "recommendations": ["List of recommendations"],
+                "escalation_needed": "true/false - whether escalation is needed",
+                "defect_tickets_needed": "true/false - whether defect tickets should be created",
+                "severity": "Critical/High/Medium/Low",
+                "priority": "P1/P2/P3/P4"
+            }}
+            
+            Context:
+            {context}
+            """
+            
+            response = await client.chat.completions.create(
+                model=self.config['llmproxy_model'],
+                messages=[
+                    {"role": "system", "content": "You are an expert technical analyst specializing in root cause analysis."},
+                    {"role": "user", "content": prompt}
+                ],
+                temperature=0.3,
+                max_tokens=4000
+            )
+            
+            # Parse JSON response
+            analysis_text = response.choices[0].message.content
+            logger.debug(f"LLM Proxy response content: {analysis_text}")
+            
+            if not analysis_text or analysis_text.strip() == "":
+                logger.error("LLM Proxy returned empty response")
+                raise ValueError("Empty response from LLM Proxy")
+            
+            try:
+                analysis = json.loads(analysis_text)
+            except json.JSONDecodeError as e:
+                logger.error(f"Failed to parse JSON response: {e}")
+                logger.error(f"Raw response: {analysis_text}")
+                
+                # Try to extract JSON from response if it's wrapped in text
+                import re
+                json_match = re.search(r'\{.*\}', analysis_text, re.DOTALL)
+                if json_match:
+                    try:
+                        analysis = json.loads(json_match.group())
+                        logger.info("Successfully extracted JSON from response")
+                    except json.JSONDecodeError:
+                        # Fallback: create a basic analysis structure
+                        analysis = self._create_fallback_analysis(analysis_text)
+                else:
+                    # Fallback: create a basic analysis structure
+                    analysis = self._create_fallback_analysis(analysis_text)
+            
+            return analysis
+            
+        except Exception as e:
+            logger.error(f"Failed to generate analysis with LLM Proxy: {e}")
+            raise
+    
     async def _try_fallback_llms(self, fallback_order: List[str], context: str) -> Dict[str, Any]:
         """Try fallback LLMs in order until one succeeds"""
         for llm_name in fallback_order:
@@ -445,6 +529,8 @@ class RCAGenerator:
                     return await self._generate_with_anthropic(context)
                 elif llm_name == 'openrouter' and self.config.get('openrouter_api_key'):
                     return await self._generate_with_openrouter(context)
+                elif llm_name == 'llmproxy' and self.config.get('llmproxy_api_key'):
+                    return await self._generate_with_llmproxy(context)
                 else:
                     logger.warning(f"No API key available for {llm_name}")
                     continue

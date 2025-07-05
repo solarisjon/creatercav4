@@ -18,6 +18,9 @@ class TestRCAGenerator:
                 'openrouter_api_key': 'test_openrouter_key',
                 'openrouter_model': 'anthropic/claude-3.5-sonnet',
                 'openrouter_base_url': 'https://openrouter.ai/api/v1',
+                'llmproxy_api_key': 'test_llmproxy_key',
+                'llmproxy_model': 'gpt-4o',
+                'llmproxy_base_url': 'https://test-llmproxy.com/v1',
                 'default_llm': 'openai'
             }
             mock_config.app_config = {
@@ -385,3 +388,69 @@ class TestRCAGenerator:
         
         with pytest.raises(ValueError, match="Unsupported LLM"):
             await rca_generator._generate_analysis(source_data, issue_description)
+    
+    @pytest.mark.asyncio
+    async def test_generate_with_llmproxy_success(self, rca_generator, mock_openai_response):
+        """Test successful analysis generation with LLM Proxy"""
+        context = "Test context for analysis"
+        
+        with patch('openai.AsyncOpenAI') as mock_openai_class:
+            mock_client = AsyncMock()
+            mock_response = Mock()
+            mock_choice = Mock()
+            mock_message = Mock()
+            mock_message.content = json.dumps(mock_openai_response)
+            mock_choice.message = mock_message
+            mock_response.choices = [mock_choice]
+            mock_client.chat.completions.create.return_value = mock_response
+            mock_openai_class.return_value = mock_client
+            
+            analysis = await rca_generator._generate_with_llmproxy(context)
+            
+            assert analysis == mock_openai_response
+            mock_client.chat.completions.create.assert_called_once()
+            
+            # Verify LLM Proxy configuration was used
+            mock_openai_class.assert_called_once_with(
+                api_key='test_llmproxy_key',
+                base_url='https://test-llmproxy.com/v1'
+            )
+    
+    @pytest.mark.asyncio
+    async def test_generate_with_llmproxy_error(self, rca_generator):
+        """Test LLM Proxy analysis generation with error"""
+        context = "Test context"
+        
+        with patch('openai.AsyncOpenAI') as mock_openai_class:
+            mock_openai_class.side_effect = Exception("LLM Proxy API error")
+            
+            with pytest.raises(Exception):
+                await rca_generator._generate_with_llmproxy(context)
+    
+    @pytest.mark.asyncio
+    async def test_generate_analysis_llmproxy_path(self, rca_generator, mock_openai_response):
+        """Test analysis generation using LLM Proxy path"""
+        rca_generator.config['default_llm'] = 'llmproxy'
+        source_data = {'files': {}, 'urls': {}, 'jira_tickets': {}}
+        issue_description = "Test issue"
+        
+        with patch.object(rca_generator, '_generate_with_llmproxy') as mock_llmproxy:
+            mock_llmproxy.return_value = mock_openai_response
+            
+            analysis = await rca_generator._generate_analysis(source_data, issue_description)
+            
+            assert analysis == mock_openai_response
+            mock_llmproxy.assert_called_once()
+    
+    @pytest.mark.asyncio
+    async def test_try_fallback_llms_llmproxy_success(self, rca_generator, mock_openai_response):
+        """Test successful fallback to LLM Proxy"""
+        context = "Test context"
+        
+        with patch.object(rca_generator, '_generate_with_llmproxy') as mock_llmproxy:
+            mock_llmproxy.return_value = mock_openai_response
+            
+            analysis = await rca_generator._try_fallback_llms(['llmproxy'], context)
+            
+            assert analysis == mock_openai_response
+            mock_llmproxy.assert_called_once()

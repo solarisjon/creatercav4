@@ -9,7 +9,7 @@ This document is currently a word docx document in data called rca_template.docx
 - **MCP Server Architecture**: Implemented MCP client with support for filesystem, Jira, and web scraping
 - **NiceGUI Web Interface**: Modern responsive web UI for file uploads, URL input, and results display
 - **Configuration Management**: Centralized config.ini for all settings (LLM keys, Jira, MCP servers)
-- **Multi-LLM Support**: Works with OpenAI GPT, Anthropic Claude, and OpenRouter models
+- **Multi-LLM Support**: Works with OpenAI GPT, Anthropic Claude, OpenRouter, and corporate LLM proxy models
 - **File Processing**: Secure file upload with validation, PDF text extraction, web scraping
 - **Jira Integration**: Read existing Jira tickets for context and analysis input
 - **RCA Generation**: Comprehensive root cause analysis with structured JSON output

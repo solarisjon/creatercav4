@@ -9,7 +9,7 @@ A modern web-based Root Cause Analysis (RCA) tool that leverages Model Context P
 - **Modern Web UI**: Built with NiceGUI for responsive, interactive experience
 - **Jira Integration**: Read and reference existing Jira tickets for context
 - **Comprehensive Analysis**: Generate detailed RCA reports with LLM assistance
-- **Multi-LLM Support**: Works with OpenAI GPT, Anthropic Claude, and OpenRouter models
+- **Multi-LLM Support**: Works with OpenAI GPT, Anthropic Claude, OpenRouter, and corporate LLM proxy models
 - **Comprehensive Testing**: Full unit test coverage for reliable operation
 
 ## Architecture
@@ -51,7 +51,7 @@ The application uses `config.ini` for all configuration settings:
 ```ini
 [LLM]
 # Choose your preferred LLM
-default_llm = anthropic  # or openai or openrouter
+default_llm = anthropic  # or openai, openrouter, or llmproxy
 
 # OpenAI Configuration
 openai_api_key = your_openai_key_here
@@ -65,6 +65,11 @@ anthropic_model = claude-3-5-sonnet-20241022
 openrouter_api_key = your_openrouter_key_here
 openrouter_model = anthropic/claude-3.5-sonnet
 # Available models: gpt-4, claude-3.5-sonnet, llama-3, etc.
+
+# LLM Proxy Configuration (corporate proxy for OpenAI-compatible models)
+llmproxy_api_key = your_llmproxy_api_key_here
+llmproxy_model = gpt-4o
+llmproxy_base_url = https://your-company-llmproxy.com/v1
 ```
 
 ### Jira Configuration
@@ -201,6 +206,25 @@ OpenRouter provides access to multiple LLM models through a single API:
 
 **Usage:**
 Set `default_llm = openrouter` in config.ini and choose your preferred model in `openrouter_model`.
+
+### Corporate LLM Proxy Support
+
+For corporate environments with internal LLM proxies:
+
+**Configuration:**
+```ini
+[LLM]
+default_llm = llmproxy
+llmproxy_api_key = your_corporate_api_key
+llmproxy_model = gpt-4o  # or any OpenAI-compatible model
+llmproxy_base_url = https://your-company-llmproxy.com/v1
+```
+
+**Benefits:**
+- Use corporate-approved LLM infrastructure
+- Maintain data security and compliance
+- Leverage internal rate limiting and monitoring
+- Compatible with OpenAI API format
 
 ## MCP Servers
 

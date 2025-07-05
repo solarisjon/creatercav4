@@ -73,6 +73,9 @@ class Config:
             'openrouter_api_key': self.get('LLM', 'openrouter_api_key'),
             'openrouter_model': self.get('LLM', 'openrouter_model', 'anthropic/claude-3.5-sonnet'),
             'openrouter_base_url': self.get('LLM', 'openrouter_base_url', 'https://openrouter.ai/api/v1'),
+            'llmproxy_api_key': self.get('LLM', 'llmproxy_api_key'),
+            'llmproxy_model': self.get('LLM', 'llmproxy_model', 'gpt-4o'),
+            'llmproxy_base_url': self.get('LLM', 'llmproxy_base_url'),
             'default_llm': self.get('LLM', 'default_llm', 'openai')
         }
     
