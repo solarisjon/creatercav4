@@ -75,11 +75,15 @@ llmproxy_base_url = https://your-company-llmproxy.com/v1
 ### Jira Configuration
 ```ini
 [JIRA]
+# Jira Configuration (Read-Only Access)
+# Used to read existing tickets for RCA context
 jira_url = https://your-domain.atlassian.net
 jira_username = your_email@company.com
 jira_api_token = your_jira_api_token_here
 jira_project_key = CPE
 ```
+
+**Note**: The application uses Bearer token authentication for Jira connections. Ensure your API token has appropriate read permissions for the specified project.
 
 ### Application Settings
 ```ini
@@ -294,7 +298,36 @@ python main.py --help
 
 ### Common Issues
 
-1. **Port already in use**
+1. **Jira Authentication Errors ("Unauthorized")**
+   - Ensure you're using a valid Jira API token (not password)
+   - The application uses Bearer token authentication automatically
+   - Verify the API token has read permissions for your Jira project
+   - Check that jira_url points to the correct Jira instance
+   
+   **Testing Jira Connection:**
+   ```bash
+   # Test Jira connectivity
+   python -c "
+   import asyncio
+   import sys
+   sys.path.insert(0, './src')
+   from mcp_client import mcp_client
+   
+   async def test():
+       await mcp_client.initialize()
+       tickets = await mcp_client.search_jira_tickets('project = YOUR_PROJECT ORDER BY created DESC', max_results=1)
+       print(f'✅ Found {len(tickets)} tickets')
+   
+   asyncio.run(test())
+   "
+   ```
+
+2. **SSL Certificate Issues**
+   - The application automatically configures SSL certificates for macOS/Linux
+   - If SSL issues persist, check your system's certificate store
+   - Corporate networks may require additional certificate configuration
+
+3. **Port already in use**
    ```bash
    # Kill existing process
    lsof -ti:8090 | xargs kill -9
