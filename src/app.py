@@ -567,21 +567,24 @@ class RCAApp:
                     with self.chat_history:
                         content = msg['content']
                         formatted = None
-                        # If the agent returned a Python dict as a string, pretty-print it as JSON
+                        # If the agent returned a Python dict as a string, pretty-print it as readable text
                         if isinstance(content, dict):
-                            formatted = "```json\n" + json.dumps(content, indent=2, ensure_ascii=False) + "\n```"
+                            pretty = "\n\n".join(f"**{k.replace('_',' ').title()}**:\n{v}" for k, v in content.items())
+                            formatted = pretty
                         else:
                             # Try to parse as JSON or Python dict string
                             try:
                                 parsed = json.loads(content)
-                                formatted = "```json\n" + json.dumps(parsed, indent=2, ensure_ascii=False) + "\n```"
+                                pretty = "\n\n".join(f"**{k.replace('_',' ').title()}**:\n{v}" for k, v in parsed.items())
+                                formatted = pretty
                             except Exception:
                                 # Try to eval as Python dict (dangerous in general, but safe for LLM output)
                                 try:
                                     import ast
                                     parsed = ast.literal_eval(content)
                                     if isinstance(parsed, dict):
-                                        formatted = "```json\n" + json.dumps(parsed, indent=2, ensure_ascii=False) + "\n```"
+                                        pretty = "\n\n".join(f"**{k.replace('_',' ').title()}**:\n{v}" for k, v in parsed.items())
+                                        formatted = pretty
                                 except Exception:
                                     # Try to extract JSON from within text
                                     import re
@@ -589,7 +592,8 @@ class RCAApp:
                                     if match:
                                         try:
                                             parsed = json.loads(match.group(1))
-                                            formatted = "```json\n" + json.dumps(parsed, indent=2, ensure_ascii=False) + "\n```"
+                                            pretty = "\n\n".join(f"**{k.replace('_',' ').title()}**:\n{v}" for k, v in parsed.items())
+                                            formatted = pretty
                                         except Exception:
                                             pass
                         if formatted:
@@ -601,7 +605,7 @@ class RCAApp:
                                     import ast
                                     parsed = ast.literal_eval(content)
                                     if isinstance(parsed, dict):
-                                        pretty = "\n".join(f"**{k.replace('_',' ').title()}**: {v}" for k, v in parsed.items())
+                                        pretty = "\n\n".join(f"**{k.replace('_',' ').title()}**:\n{v}" for k, v in parsed.items())
                                         ui.markdown(f"**Agent:**\n{pretty}").classes('text-left text-gray-800')
                                         continue
                                 except Exception:
