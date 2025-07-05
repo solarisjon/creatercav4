@@ -122,11 +122,15 @@ class RCAApp:
 
             # Chat/Agentic RCA Refinement Section
             with ui.card().classes('w-full mb-4 netapp-card'):
-                ui.label('RCA Chat & Refinement').classes('text-lg font-semibold mb-2 text-[#0067c5]')
+                ui.label('RCA Agentic Chat & Deep Analysis').classes('text-lg font-semibold mb-2 text-[#0067c5]')
+                ui.markdown(
+                    "Use this chat to ask deep questions about the uploaded cases, request section rewrites, or instruct the agent to extract or expand on specific RCA sections. "
+                    "The agent will use all available context and prior analysis to answer or refine the RCA."
+                ).classes('text-sm mb-2')
                 self.chat_history = ui.column().classes('w-full min-h-[120px] max-h-[300px] overflow-y-auto bg-[#f7f9fa] p-2 rounded')
                 self.chat_messages: List[dict] = []
                 with ui.row().classes('w-full'):
-                    self.chat_input = ui.input('Ask a question or request a refinement...').classes('flex-grow')
+                    self.chat_input = ui.input('Ask a question, request a section rewrite, or instruct the agent...').classes('flex-grow')
                     ui.button('Send', on_click=self.handle_chat_message).classes('ml-2 netapp-btn-primary')
     
     def handle_file_upload(self, e):
@@ -469,6 +473,10 @@ class RCAApp:
     async def agentic_chat(self, user_message: str):
         """
         Use the LLM to answer questions or refine RCA sections based on the current context and analysis.
+        This agentic methodology will:
+        - Deeply analyze all uploaded files, Jira tickets, and URLs.
+        - Allow the user to request extraction, expansion, or rewriting of any RCA section.
+        - Allow follow-up questions and iterative refinement.
         """
         # Compose context for the agent
         context = ""
@@ -489,11 +497,12 @@ class RCAApp:
 
         # Compose the agentic prompt
         prompt = (
-            "You are an expert RCA assistant. "
-            "Given the current RCA analysis and context, answer the user's question or refine the requested RCA section. "
+            "You are an expert RCA agent. Your job is to deeply analyze all provided case data, Jira tickets, and supporting documents. "
+            "You can extract, expand, or rewrite any RCA section on request, and answer follow-up questions using all available context. "
             "If the user asks to rewrite or expand a section, return only the improved text for that section. "
             "If the user asks a question, answer concisely and reference the RCA data. "
-            "If you need more information, ask the user for clarification.\n\n"
+            "If you need more information, ask the user for clarification. "
+            "Always use as much detail as possible from the context and prior analysis.\n\n"
             f"User message: {user_message}\n"
             f"{context}"
         )
