@@ -185,51 +185,54 @@ class RCAApp:
     async def show_linked_issues_dialog(self, linked_issues, main_ticket=None):
         """Show a dialog with a checklist of linked issues for user to add, and always add the main ticket if confirmed.
         No file upload for tickets in this dialog.
+        The dialog is less opaque and more condensed for better UX.
         """
-        dialog = ui.dialog().props('persistent')
+        # Use a less opaque, more compact dialog
+        dialog = ui.dialog().props('persistent').props('max-width=420px').style('background:rgba(255,255,255,0.95);')
         with dialog:
-            if linked_issues:
-                ui.label('Add Linked Jira Issues').classes('text-lg font-semibold mb-2')
-                ui.markdown('This ticket has linked Jira issues. Select any you want to include in the RCA context. The main ticket will always be included.')
-            else:
-                ui.label('Add Jira Ticket').classes('text-lg font-semibold mb-2')
-                ui.markdown('No linked issues found. Confirm to add this ticket to the RCA context.')
+            with ui.column().classes('gap-2 p-2'):
+                if linked_issues:
+                    ui.label('Add Linked Jira Issues').classes('text-base font-semibold mb-1')
+                    ui.markdown('Select any linked Jira issues to include. The main ticket will always be included.').classes('text-sm mb-2')
+                else:
+                    ui.label('Add Jira Ticket').classes('text-base font-semibold mb-1')
+                    ui.markdown('No linked issues found. Confirm to add this ticket.').classes('text-sm mb-2')
 
-            # Show the main ticket as always checked and disabled
-            if main_ticket:
-                ui.checkbox(f"{main_ticket} (Main ticket)", value=True).props('disable')
-            checkboxes = []
-            for issue in linked_issues:
-                key = issue.get('key', '')
-                summary = issue.get('summary', '')
-                link_type = issue.get('link_type', '')
-                direction = issue.get('direction', '')
-                label = f"{key} ({link_type}, {direction}) - {summary}"
-                cb = ui.checkbox(label, value=False)
-                checkboxes.append((cb, key))
-            with ui.row():
-                async def on_confirm():
-                    added = 0
-                    # Always add the main ticket if not already present
-                    if main_ticket and main_ticket not in self.jira_tickets:
-                        self.jira_tickets.append(main_ticket)
-                        added += 1
-                    # Read checkbox values for linked issues
-                    for cb, key in checkboxes:
-                        if cb.value and key not in self.jira_tickets:
-                            self.jira_tickets.append(key)
+                # Show the main ticket as always checked and disabled
+                if main_ticket:
+                    ui.checkbox(f"{main_ticket} (Main ticket)", value=True).props('disable').classes('text-xs')
+                checkboxes = []
+                for issue in linked_issues:
+                    key = issue.get('key', '')
+                    summary = issue.get('summary', '')
+                    link_type = issue.get('link_type', '')
+                    direction = issue.get('direction', '')
+                    label = f"{key} ({link_type}, {direction}) - {summary}"
+                    cb = ui.checkbox(label, value=False).classes('text-xs')
+                    checkboxes.append((cb, key))
+                with ui.row().classes('gap-2 mt-2'):
+                    async def on_confirm():
+                        added = 0
+                        # Always add the main ticket if not already present
+                        if main_ticket and main_ticket not in self.jira_tickets:
+                            self.jira_tickets.append(main_ticket)
                             added += 1
-                    self.update_tickets_display()
-                    if added == 1 and main_ticket:
-                        ui.notify(f"Added main Jira ticket: {main_ticket}", type='positive')
-                    elif added > 0:
-                        ui.notify(f"Added {added} Jira issues", type='positive')
-                    else:
-                        ui.notify("No new Jira issues added", type='info')
-                    self.ticket_input.value = ''
-                    dialog.close()
-                ui.button('Add Selected', on_click=on_confirm).props('color=primary')
-                ui.button('Cancel', on_click=dialog.close)
+                        # Read checkbox values for linked issues
+                        for cb, key in checkboxes:
+                            if cb.value and key not in self.jira_tickets:
+                                self.jira_tickets.append(key)
+                                added += 1
+                        self.update_tickets_display()
+                        if added == 1 and main_ticket:
+                            ui.notify(f"Added main Jira ticket: {main_ticket}", type='positive')
+                        elif added > 0:
+                            ui.notify(f"Added {added} Jira issues", type='positive')
+                        else:
+                            ui.notify("No new Jira issues added", type='info')
+                        self.ticket_input.value = ''
+                        dialog.close()
+                    ui.button('Add Selected', on_click=on_confirm).props('color=primary').classes('min-w-0 px-2 py-1 text-xs')
+                    ui.button('Cancel', on_click=dialog.close).classes('min-w-0 px-2 py-1 text-xs')
         await dialog.open()
     
     def update_files_display(self):
