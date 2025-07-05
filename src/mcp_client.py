@@ -171,7 +171,11 @@ class MCPClient:
             raise
     
     async def create_jira_ticket(self, ticket_data: Dict[str, Any]) -> str:
-        """Create a Jira ticket using Jira MCP server"""
+        """Create a Jira ticket using Jira MCP server
+        
+        Note: This method is available for future use but is not currently 
+        used by the RCA generator, which operates in read-only mode for Jira.
+        """
         try:
             from jira import JIRA
             

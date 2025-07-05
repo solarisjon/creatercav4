@@ -17,13 +17,12 @@ openrouter_base_url = https://openrouter.ai/api/v1
 default_llm = anthropic
 
 [JIRA]
-# Jira Configuration
+# Jira Configuration (Read-Only Access)
+# Used to read existing tickets for RCA context
 jira_url = https://your-domain.atlassian.net
 jira_username = your_email@company.com
 jira_api_token = your_jira_api_token_here
 jira_project_key = CPE
-jira_escalation_project = CPE
-jira_defect_project = CPE
 
 [MCP]
 # MCP Server Configuration

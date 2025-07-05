@@ -9,11 +9,11 @@ This document is currently a word docx document in data called rca_template.docx
 - **MCP Server Architecture**: Implemented MCP client with support for filesystem, Jira, and web scraping
 - **NiceGUI Web Interface**: Modern responsive web UI for file uploads, URL input, and results display
 - **Configuration Management**: Centralized config.ini for all settings (LLM keys, Jira, MCP servers)
-- **Multi-LLM Support**: Works with both OpenAI GPT and Anthropic Claude models
+- **Multi-LLM Support**: Works with OpenAI GPT, Anthropic Claude, and OpenRouter models
 - **File Processing**: Secure file upload with validation, PDF text extraction, web scraping
-- **Jira Integration**: Full Jira ticket creation, search, and data extraction capabilities
+- **Jira Integration**: Read existing Jira tickets for context and analysis input
 - **RCA Generation**: Comprehensive root cause analysis with structured JSON output
-- **Automated Ticket Creation**: Creates escalation and defect tickets based on analysis
+- **Read-Only Jira Access**: References existing tickets as context without creating new ones
 - **Comprehensive Testing**: Full unit test suite with 80%+ coverage requirement
 - **Security Features**: File validation, path restrictions, input sanitization
 - **Structured Project**: Clean src/ directory structure with proper module organization
@@ -45,17 +45,17 @@ test_mcp/
 1. **Multi-Source Data Integration**: PDFs, web URLs, Jira tickets
 2. **MCP vs RAG**: Uses Model Context Protocol for efficient data access
 3. **LLM-Powered Analysis**: Generates structured RCA reports with recommendations
-4. **Automated Workflows**: Creates Jira tickets based on analysis severity
+4. **Context-Rich Analysis**: Uses existing Jira tickets as additional context for analysis
 5. **Security-First Design**: Input validation, file restrictions, secure configurations
 6. **Testing Coverage**: Comprehensive test suite for reliable operation
 
 ### 💻 Usage Instructions
 1. Configure API keys in config.ini (OpenAI/Anthropic, Jira)
 2. Run: `python main.py`
-3. Open: http://localhost:8080
+3. Open: http://localhost:8090
 4. Upload files, add URLs, reference Jira tickets
 5. Describe the issue needing analysis
-6. Generate comprehensive RCA report with automated ticket creation
+6. Generate comprehensive RCA report using all provided context
 
 ### 🧪 Testing
 - Run tests: `pytest`

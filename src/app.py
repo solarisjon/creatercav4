@@ -60,7 +60,7 @@ class RCAApp:
                 2. **Add URLs**: Include links to Confluence pages, documentation, or other web resources
                 3. **Reference Jira Tickets**: Add existing ticket IDs for context
                 4. **Describe Issue**: Provide a clear description of the problem
-                5. **Generate Analysis**: Click to create the RCA report and optionally create Jira tickets
+                5. **Generate Analysis**: Click to create the comprehensive RCA report
                 """)
             
             # File Upload Section
@@ -296,13 +296,6 @@ class RCAApp:
                         ui.markdown(f"• {rec}")
                 else:
                     ui.markdown('N/A')
-            
-            # Jira Tickets Created
-            if self.analysis_result.get('jira_tickets'):
-                with ui.card().classes('w-full mb-4'):
-                    ui.label('Jira Tickets Created').classes('text-lg font-semibold mb-2')
-                    for ticket in self.analysis_result['jira_tickets']:
-                        ui.markdown(f"• {ticket}")
             
             # Raw Response (if available)
             if analysis.get('raw_response'):
