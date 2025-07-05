@@ -154,7 +154,7 @@ class RCAApp:
             ui.notify('Please enter a valid URL', type='negative')
     
     async def add_jira_ticket(self):
-        """Add Jira ticket to list and fetch linked issues for user selection"""
+        """Add Jira ticket to list and fetch linked issues for user selection, always show dialog for confirmation."""
         ticket = self.ticket_input.value.strip().upper()
         if not ticket:
             ui.notify('Please enter a valid Jira ticket ID', type='negative')
@@ -174,26 +174,33 @@ class RCAApp:
             logger.error(f"Failed to fetch linked issues for {ticket}: {e}")
             linked_issues = []
 
-        # Always show a dialog if there are linked issues, otherwise add the ticket directly
-        if linked_issues:
-            await self.show_linked_issues_dialog(linked_issues, main_ticket=ticket)
-        else:
-            # Add the main ticket if no linked issues
-            self.jira_tickets.append(ticket)
-            self.update_tickets_display()
-            ui.notify(f'Jira ticket added: {ticket}', type='positive')
-            self.ticket_input.value = ''
+        # Always show a dialog, even if no linked issues, for confirmation and possible future file upload
+        await self.show_linked_issues_dialog(linked_issues, main_ticket=ticket)
 
     async def show_linked_issues_dialog(self, linked_issues, main_ticket=None):
-        """Show a dialog with a checklist of linked issues for user to add, and always add the main ticket if confirmed"""
+        """Show a dialog with a checklist of linked issues for user to add, and always add the main ticket if confirmed.
+        Also allow file upload for each ticket in the dialog.
+        """
         dialog = ui.dialog().props('persistent')
         with dialog:
-            ui.label('Add Linked Jira Issues').classes('text-lg font-semibold mb-2')
-            ui.markdown('This ticket has linked Jira issues. Select any you want to include in the RCA context. The main ticket will always be included.')
+            if linked_issues:
+                ui.label('Add Linked Jira Issues').classes('text-lg font-semibold mb-2')
+                ui.markdown('This ticket has linked Jira issues. Select any you want to include in the RCA context. The main ticket will always be included.')
+            else:
+                ui.label('Add Jira Ticket').classes('text-lg font-semibold mb-2')
+                ui.markdown('No linked issues found. Confirm to add this ticket to the RCA context.')
+
             # Show the main ticket as always checked and disabled
             if main_ticket:
                 ui.checkbox(f"{main_ticket} (Main ticket)", value=True).props('disable')
+                # File upload for main ticket
+                file_upload_main = ui.upload(
+                    label=f"Upload file for {main_ticket}",
+                    multiple=True,
+                    max_file_size=self.config['max_file_size_mb'] * 1024 * 1024
+                )
             checkboxes = []
+            file_uploads = []
             for issue in linked_issues:
                 key = issue.get('key', '')
                 summary = issue.get('summary', '')
@@ -202,6 +209,13 @@ class RCAApp:
                 label = f"{key} ({link_type}, {direction}) - {summary}"
                 cb = ui.checkbox(label, value=False)
                 checkboxes.append((cb, key))
+                # File upload for each linked issue
+                file_upload = ui.upload(
+                    label=f"Upload file for {key}",
+                    multiple=True,
+                    max_file_size=self.config['max_file_size_mb'] * 1024 * 1024
+                )
+                file_uploads.append((file_upload, key))
             with ui.row():
                 async def on_confirm():
                     added = 0
@@ -209,12 +223,29 @@ class RCAApp:
                     if main_ticket and main_ticket not in self.jira_tickets:
                         self.jira_tickets.append(main_ticket)
                         added += 1
+                        # Handle file uploads for main ticket
+                        if main_ticket and 'file_upload_main' in locals():
+                            for file in file_upload_main.files:
+                                file_path = self.file_handler.save_uploaded_file(
+                                    file.content.read(), file.name
+                                )
+                                if file_path:
+                                    self.uploaded_files.append(str(file_path))
                     # Read checkbox values for linked issues
-                    for cb, key in checkboxes:
+                    for idx, (cb, key) in enumerate(checkboxes):
                         if cb.value and key not in self.jira_tickets:
                             self.jira_tickets.append(key)
                             added += 1
+                            # Handle file uploads for linked issues
+                            file_upload, upload_key = file_uploads[idx]
+                            for file in file_upload.files:
+                                file_path = self.file_handler.save_uploaded_file(
+                                    file.content.read(), file.name
+                                )
+                                if file_path:
+                                    self.uploaded_files.append(str(file_path))
                     self.update_tickets_display()
+                    self.update_files_display()
                     if added == 1 and main_ticket:
                         ui.notify(f"Added main Jira ticket: {main_ticket}", type='positive')
                     elif added > 0:
@@ -249,13 +280,21 @@ class RCAApp:
                     ui.button(icon='delete', on_click=lambda idx=i: self.remove_url(idx)).classes('text-red-600')
     
     def update_tickets_display(self):
-        """Update the Jira tickets display"""
+        """Update the Jira tickets display, showing linked issues visually."""
         self.tickets_list.clear()
         for i, ticket in enumerate(self.jira_tickets):
+            is_linked = False
+            # Heuristic: if ticket is not the first/main ticket, mark as linked
+            if i > 0:
+                is_linked = True
             with self.tickets_list:
                 with ui.row().classes('w-full items-center'):
-                    ui.icon('confirmation_number').classes('text-orange-600')
-                    ui.label(ticket).classes('flex-grow')
+                    if is_linked:
+                        ui.icon('call_merge').classes('text-purple-600')
+                        ui.label(f"{ticket} (Linked)").classes('flex-grow text-purple-800')
+                    else:
+                        ui.icon('confirmation_number').classes('text-orange-600')
+                        ui.label(ticket).classes('flex-grow')
                     ui.button(icon='delete', on_click=lambda idx=i: self.remove_ticket(idx)).classes('text-red-600')
     
     def remove_file(self, index: int):
