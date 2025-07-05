@@ -7,6 +7,9 @@ import json
 from src.config import config
 from src.mcp_client import mcp_client
 
+from docx import Document
+import re
+
 logger = logging.getLogger(__name__)
 
 class RCAGenerator:
@@ -564,25 +567,83 @@ class RCAGenerator:
         }
     
     async def _create_rca_document(self, analysis: Dict[str, Any]) -> Path:
-        """Create RCA document from analysis"""
+        """Create RCA document from analysis, filling in the Word template"""
         try:
             timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-            output_file = self.output_dir / f"rca_report_{timestamp}.json"
-            
-            # Create output directory if it doesn't exist
+            output_file = self.output_dir / f"rca_report_{timestamp}.docx"
             self.output_dir.mkdir(parents=True, exist_ok=True)
-            
-            # For now, save as JSON. Later we can implement Word document generation
-            with open(output_file, 'w', encoding='utf-8') as f:
-                json.dump(analysis, f, indent=2, ensure_ascii=False)
-            
-            logger.info(f"RCA document created: {output_file}")
+
+            template_path = Path("rca_template_doc.docx")
+            if not template_path.exists():
+                # fallback to JSON if template is missing
+                json_file = self.output_dir / f"rca_report_{timestamp}.json"
+                with open(json_file, 'w', encoding='utf-8') as f:
+                    json.dump(analysis, f, indent=2, ensure_ascii=False)
+                logger.warning(f"Template not found, saved as JSON: {json_file}")
+                return json_file
+
+            doc = Document(template_path)
+
+            # Map analysis keys to possible section headers in the template
+            section_map = {
+                "executive_summary": ["Executive Summary"],
+                "problem_statement": ["Problem Statement"],
+                "timeline": ["Timeline"],
+                "root_cause": ["Root Cause"],
+                "contributing_factors": ["Contributing Factors"],
+                "impact_assessment": ["Impact Assessment"],
+                "corrective_actions": ["Corrective Actions"],
+                "preventive_measures": ["Preventive Measures"],
+                "recommendations": ["Recommendations"],
+                "escalation_needed": ["Escalation Needed"],
+                "defect_tickets_needed": ["Defect Tickets Needed"],
+                "severity": ["Severity"],
+                "priority": ["Priority"],
+            }
+
+            # Flatten analysis values for insertion
+            def get_section_content(key):
+                val = analysis.get(key, "")
+                if isinstance(val, list):
+                    return "\n".join(f"- {v}" for v in val)
+                if isinstance(val, bool):
+                    return "Yes" if val else "No"
+                return str(val)
+
+            # Fill in the template by replacing prompts with analysis content
+            for para in doc.paragraphs:
+                for key, headers in section_map.items():
+                    for header in headers:
+                        # If the paragraph text matches a header, fill the next paragraph(s)
+                        if para.text.strip().lower() == header.lower():
+                            # Find the next non-header paragraph (the prompt) and replace it
+                            idx = doc.paragraphs.index(para)
+                            # Look ahead for the prompt paragraph
+                            for next_para in doc.paragraphs[idx+1:]:
+                                # If next_para is empty or looks like a prompt, replace it
+                                if next_para.text.strip() and (
+                                    "enter" in next_para.text.lower() or
+                                    "describe" in next_para.text.lower() or
+                                    "summarize" in next_para.text.lower() or
+                                    "list" in next_para.text.lower() or
+                                    "provide" in next_para.text.lower() or
+                                    "explain" in next_para.text.lower() or
+                                    "prompt" in next_para.text.lower()
+                                ):
+                                    next_para.text = get_section_content(key)
+                                    break
+                                # If we hit another header, stop
+                                if next_para.text.strip() in [h for hs in section_map.values() for h in hs]:
+                                    break
+
+            # Save the filled document
+            doc.save(output_file)
+            logger.info(f"RCA Word document created: {output_file}")
             return output_file
-            
+
         except Exception as e:
             logger.error(f"Failed to create RCA document: {e}")
             raise
-    
 
 # Global RCA generator instance
 rca_generator = RCAGenerator()
