@@ -107,9 +107,7 @@ class RCAApp:
                 self.update_tickets_display()
 
             # Issue Description Section
-            with ui.card().classes('w-full mb-4 netapp-card'):
-                ui.label('Issue Description').classes('text-lg font-semibold mb-2 text-[#0067c5]')
-                self.issue_description = ui.textarea('Describe the issue that needs root cause analysis...').classes('w-full')
+            # (Removed as per request)
 
             # Analysis Section
             with ui.card().classes('w-full mb-4 netapp-card'):
@@ -302,10 +300,6 @@ class RCAApp:
         """Generate RCA analysis"""
         try:
             # Validate inputs
-            if not self.issue_description.value.strip():
-                ui.notify('Please provide an issue description', type='negative')
-                return
-            
             if not self.uploaded_files and not self.urls and not self.jira_tickets:
                 ui.notify('Please add at least one file, URL, or Jira ticket', type='negative')
                 return
@@ -320,7 +314,7 @@ class RCAApp:
                 files=self.uploaded_files,
                 urls=self.urls,
                 jira_tickets=self.jira_tickets,
-                issue_description=self.issue_description.value.strip()
+                issue_description=""
             )
             
             self.progress_bar.value = 1.0
@@ -445,7 +439,6 @@ class RCAApp:
         self.uploaded_files.clear()
         self.urls.clear()
         self.jira_tickets.clear()
-        self.issue_description.value = ''
         self.analysis_result = None
         
         self.update_files_display()
