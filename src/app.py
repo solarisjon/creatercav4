@@ -119,6 +119,15 @@ class RCAApp:
                 self.progress_bar = ui.linear_progress(value=0).classes('w-full mt-2')
                 self.progress_bar.visible = False
                 self.results_container = ui.column().classes('w-full mt-4')
+
+            # Chat/Agentic RCA Refinement Section
+            with ui.card().classes('w-full mb-4 netapp-card'):
+                ui.label('RCA Chat & Refinement').classes('text-lg font-semibold mb-2 text-[#0067c5]')
+                self.chat_history = ui.column().classes('w-full min-h-[120px] max-h-[300px] overflow-y-auto bg-[#f7f9fa] p-2 rounded')
+                self.chat_messages: List[dict] = []
+                with ui.row().classes('w-full'):
+                    self.chat_input = ui.input('Ask a question or request a refinement...').classes('flex-grow')
+                    ui.button('Send', on_click=self.handle_chat_message).classes('ml-2 netapp-btn-primary')
     
     def handle_file_upload(self, e):
         """Handle file upload"""
@@ -452,7 +461,79 @@ class RCAApp:
     def reset_context(self):
         """Reset the context for a new RCA session (clears all files, URLs, tickets, and results)"""
         self.clear_all()
+        self.chat_messages = []
+        if hasattr(self, "chat_history"):
+            self.chat_history.clear()
         ui.notify('Context has been reset. You can now start a new RCA without any previous data.', type='info')
+
+    async def agentic_chat(self, user_message: str):
+        """
+        Use the LLM to answer questions or refine RCA sections based on the current context and analysis.
+        """
+        # Compose context for the agent
+        context = ""
+        if self.analysis_result:
+            context += "Current RCA Analysis:\n"
+            for k, v in self.analysis_result['analysis'].items():
+                context += f"{k}: {v}\n"
+        else:
+            context += "No RCA analysis has been generated yet.\n"
+        if self.uploaded_files or self.urls or self.jira_tickets:
+            context += "\nFiles: " + ", ".join([str(Path(f).name) for f in self.uploaded_files])
+            context += "\nURLs: " + ", ".join(self.urls)
+            context += "\nJira Tickets: " + ", ".join(self.jira_tickets)
+        context += "\n\nChat History:\n"
+        for msg in self.chat_messages:
+            context += f"{msg['role'].capitalize()}: {msg['content']}\n"
+        context += "\n"
+
+        # Compose the agentic prompt
+        prompt = (
+            "You are an expert RCA assistant. "
+            "Given the current RCA analysis and context, answer the user's question or refine the requested RCA section. "
+            "If the user asks to rewrite or expand a section, return only the improved text for that section. "
+            "If the user asks a question, answer concisely and reference the RCA data. "
+            "If you need more information, ask the user for clarification.\n\n"
+            f"User message: {user_message}\n"
+            f"{context}"
+        )
+
+        # Use the LLM (OpenAI/Anthropic/etc.) to get a response
+        try:
+            from src.rca_generator import rca_generator
+            llm_response = await rca_generator._generate_with_openai(prompt)
+            return llm_response if isinstance(llm_response, str) else str(llm_response)
+        except Exception as e:
+            logger.error(f"Agentic chat LLM error: {e}")
+            return f"Error: {e}"
+
+    def update_chat_history(self):
+        """Update the chat message display in the UI."""
+        if hasattr(self, "chat_history"):
+            self.chat_history.clear()
+            for msg in self.chat_messages:
+                if msg['role'] == 'user':
+                    with self.chat_history:
+                        ui.markdown(f"**You:** {msg['content']}").classes('text-right text-blue-800')
+                else:
+                    with self.chat_history:
+                        ui.markdown(f"**Agent:** {msg['content']}").classes('text-left text-gray-800')
+
+    def handle_chat_message(self):
+        """Handle user chat input and update the chat history."""
+        user_message = self.chat_input.value.strip()
+        if not user_message:
+            ui.notify("Please enter a message.", type='warning')
+            return
+        self.chat_messages.append({'role': 'user', 'content': user_message})
+        self.update_chat_history()
+        self.chat_input.value = ''
+        # Run the agentic chat in the background
+        async def run_agentic():
+            agent_response = await self.agentic_chat(user_message)
+            self.chat_messages.append({'role': 'agent', 'content': agent_response})
+            self.update_chat_history()
+        asyncio.create_task(run_agentic())
 
 # Global app instance
 rca_app = RCAApp()
