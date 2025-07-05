@@ -14,9 +14,9 @@ logger = logging.getLogger(__name__)
 
 def extract_template_prompts(template_path):
     """
-    Parse the Word template and extract a list of (header, prompt) sections.
+    Parse the Word template and extract all sections, including headers and their prompts.
     Each section is a dict: {'header': str, 'prompt': str, 'header_idx': int, 'prompt_idx': int}
-    Prompts are any text between < > under a header.
+    Prompts are any text between < > under a header. If no prompt, still create a section with prompt="".
     """
     doc = Document(template_path)
     results = []
@@ -25,10 +25,12 @@ def extract_template_prompts(template_path):
     while i < len(paragraphs):
         header = paragraphs[i].text.strip()
         if header:
-            # Look for the next paragraph with a prompt in < >
+            # Look for the next paragraph(s) until next header or end
             j = i + 1
+            found_prompt = False
             while j < len(paragraphs):
-                prompt_match = re.search(r"<(.+?)>", paragraphs[j].text)
+                para_text = paragraphs[j].text.strip()
+                prompt_match = re.search(r"<(.+?)>", para_text)
                 if prompt_match:
                     prompt = prompt_match.group(1).strip()
                     results.append({
@@ -37,11 +39,20 @@ def extract_template_prompts(template_path):
                         "header_idx": i,
                         "prompt_idx": j
                     })
+                    found_prompt = True
                     break
-                # If we hit another header, stop
-                if paragraphs[j].text.strip():
+                # If we hit another header (non-empty, not a prompt), stop
+                if para_text and not re.search(r"<(.+?)>", para_text):
                     break
                 j += 1
+            # If no prompt found, still add the header as a section with empty prompt
+            if not found_prompt:
+                results.append({
+                    "header": header,
+                    "prompt": "",
+                    "header_idx": i,
+                    "prompt_idx": None
+                })
         i += 1
     return results
 
