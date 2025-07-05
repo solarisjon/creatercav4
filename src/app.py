@@ -358,6 +358,7 @@ class RCAApp:
                 "customer": ["customer", "customer_name", "client", "account"],
                 "cases": ["cases", "case", "support_case", "support_cases", "tickets", "jira_tickets"],
                 "synopsis": ["synopsis", "summary", "executive_summary", "overview", "description"],
+                "issue_tracking_number": ["issue_tracking_number", "case", "cases", "support_case", "sap_case", "tracking_number"],
             }
             if template_sections:
                 for section in template_sections:
@@ -383,6 +384,7 @@ class RCAApp:
                                         break
                             if key:
                                 break
+                    # Only show if not already shown
                     if key is not None and key not in shown_keys:
                         value = analysis.get(key)
                         shown_keys.add(key)
@@ -406,17 +408,18 @@ class RCAApp:
                         else:
                             ui.markdown(str(v))
 
-            # Show any remaining keys in analysis not already shown
-            for k, v in analysis.items():
-                if k in shown_keys:
-                    continue
-                with ui.card().classes('w-full mb-4'):
-                    ui.label(k.replace("_", " ").title()).classes('text-lg font-semibold mb-2')
-                    if isinstance(v, list):
-                        for item in v:
-                            ui.markdown(f"• {item}")
-                    else:
-                        ui.markdown(str(v))
+            # Do NOT show any remaining keys in analysis not already shown (prevents duplicate output)
+            # (If you want to show them, uncomment below)
+            # for k, v in analysis.items():
+            #     if k in shown_keys:
+            #         continue
+            #     with ui.card().classes('w-full mb-4'):
+            #         ui.label(k.replace("_", " ").title()).classes('text-lg font-semibold mb-2')
+            #         if isinstance(v, list):
+            #             for item in v:
+            #                 ui.markdown(f"• {item}")
+            #         else:
+            #             ui.markdown(str(v))
 
             # Raw Response (if available)
             if analysis.get('raw_response'):
