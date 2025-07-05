@@ -565,26 +565,47 @@ class RCAApp:
                         ui.markdown(f"**You:** {msg['content']}").classes('text-right text-blue-800')
                 else:
                     with self.chat_history:
-                        # Try to pretty-print JSON if the agent's response is JSON
                         content = msg['content']
                         formatted = None
-                        try:
-                            # Try to parse as JSON object or array
-                            parsed = json.loads(content)
-                            formatted = "```json\n" + json.dumps(parsed, indent=2, ensure_ascii=False) + "\n```"
-                        except Exception:
-                            # Try to extract JSON from within text
-                            import re
-                            match = re.search(r'(\{.*\}|\[.*\])', content, re.DOTALL)
-                            if match:
+                        # If the agent returned a Python dict as a string, pretty-print it as JSON
+                        if isinstance(content, dict):
+                            formatted = "```json\n" + json.dumps(content, indent=2, ensure_ascii=False) + "\n```"
+                        else:
+                            # Try to parse as JSON or Python dict string
+                            try:
+                                parsed = json.loads(content)
+                                formatted = "```json\n" + json.dumps(parsed, indent=2, ensure_ascii=False) + "\n```"
+                            except Exception:
+                                # Try to eval as Python dict (dangerous in general, but safe for LLM output)
                                 try:
-                                    parsed = json.loads(match.group(1))
-                                    formatted = "```json\n" + json.dumps(parsed, indent=2, ensure_ascii=False) + "\n```"
+                                    import ast
+                                    parsed = ast.literal_eval(content)
+                                    if isinstance(parsed, dict):
+                                        formatted = "```json\n" + json.dumps(parsed, indent=2, ensure_ascii=False) + "\n```"
                                 except Exception:
-                                    pass
+                                    # Try to extract JSON from within text
+                                    import re
+                                    match = re.search(r'(\{.*\}|\[.*\])', content, re.DOTALL)
+                                    if match:
+                                        try:
+                                            parsed = json.loads(match.group(1))
+                                            formatted = "```json\n" + json.dumps(parsed, indent=2, ensure_ascii=False) + "\n```"
+                                        except Exception:
+                                            pass
                         if formatted:
                             ui.markdown(f"**Agent:**\n{formatted}").classes('text-left text-gray-800')
                         else:
+                            # If it's a dict-like string, try to pretty print as key-value pairs
+                            if content.strip().startswith("{") and content.strip().endswith("}"):
+                                try:
+                                    import ast
+                                    parsed = ast.literal_eval(content)
+                                    if isinstance(parsed, dict):
+                                        pretty = "\n".join(f"**{k.replace('_',' ').title()}**: {v}" for k, v in parsed.items())
+                                        ui.markdown(f"**Agent:**\n{pretty}").classes('text-left text-gray-800')
+                                        continue
+                                except Exception:
+                                    pass
                             ui.markdown(f"**Agent:** {content}").classes('text-left text-gray-800')
 
     def handle_chat_message(self):
