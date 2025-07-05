@@ -363,17 +363,18 @@ class RCAApp:
                         if k.lower().replace(" ", "_") == norm_header:
                             key = k
                             break
-                    value = analysis.get(key) if key else None
-                    shown_keys.add(key)
-                    with ui.card().classes('w-full mb-4'):
-                        ui.label(header).classes('text-lg font-semibold mb-2')
-                        if isinstance(value, list):
-                            for v in value:
-                                ui.markdown(f"• {v}")
-                        elif value is not None:
-                            ui.markdown(str(value))
-                        else:
-                            ui.markdown("N/A")
+                    if key is not None and key not in shown_keys:
+                        value = analysis.get(key)
+                        shown_keys.add(key)
+                        with ui.card().classes('w-full mb-4'):
+                            ui.label(header).classes('text-lg font-semibold mb-2')
+                            if isinstance(value, list):
+                                for v in value:
+                                    ui.markdown(f"• {v}")
+                            elif value is not None:
+                                ui.markdown(str(value))
+                            else:
+                                ui.markdown("N/A")
             else:
                 # Fallback: show all keys in analysis
                 for k, v in analysis.items():
