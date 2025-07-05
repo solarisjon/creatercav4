@@ -716,12 +716,20 @@ class RCAGenerator:
                     value = "Yes" if value else "No"
                 else:
                     value = str(value)
-                para = doc.paragraphs[info['prompt_idx']]
-                # Replace <...> with value, or if not found, just set text
-                para.text = re.sub(r"<(.+?)>", value, para.text)
-                # If no <...> found, just replace the whole paragraph with value
-                if "<" not in para.text and ">" not in para.text and not re.search(r"<(.+?)>", para.text):
-                    para.text = value
+                # Only try to access para if prompt_idx is not None
+                if info['prompt_idx'] is not None:
+                    para = doc.paragraphs[info['prompt_idx']]
+                    # Replace <...> with value, or if not found, just set text
+                    para.text = re.sub(r"<(.+?)>", value, para.text)
+                    # If no <...> found, just replace the whole paragraph with value
+                    if "<" not in para.text and ">" not in para.text and not re.search(r"<(.+?)>", para.text):
+                        para.text = value
+                else:
+                    # If there is no prompt_idx, try to insert value after the header
+                    header_idx = info['header_idx']
+                    # Only insert if header_idx is valid and not the last paragraph
+                    if header_idx is not None and header_idx + 1 < len(doc.paragraphs):
+                        doc.paragraphs[header_idx + 1].text = value
 
             # Save the filled document
             doc.save(output_file)
