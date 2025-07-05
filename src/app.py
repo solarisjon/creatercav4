@@ -264,39 +264,66 @@ class RCAApp:
         """Display analysis results"""
         if not self.analysis_result:
             return
-        
+
         self.results_container.clear()
-        
+
         with self.results_container:
             ui.label('Analysis Results').classes('text-xl font-semibold mb-4')
-            
+
             analysis = self.analysis_result['analysis']
-            
-            # Executive Summary
-            with ui.card().classes('w-full mb-4'):
-                ui.label('Executive Summary').classes('text-lg font-semibold mb-2')
-                ui.markdown(analysis.get('executive_summary', 'N/A'))
-            
-            # Problem Statement
-            with ui.card().classes('w-full mb-4'):
-                ui.label('Problem Statement').classes('text-lg font-semibold mb-2')
-                ui.markdown(analysis.get('problem_statement', 'N/A'))
-            
-            # Root Cause
-            with ui.card().classes('w-full mb-4'):
-                ui.label('Root Cause').classes('text-lg font-semibold mb-2')
-                ui.markdown(analysis.get('root_cause', 'N/A'))
-            
-            # Recommendations
-            with ui.card().classes('w-full mb-4'):
-                ui.label('Recommendations').classes('text-lg font-semibold mb-2')
-                recommendations = analysis.get('recommendations', [])
-                if recommendations:
-                    for rec in recommendations:
-                        ui.markdown(f"• {rec}")
-                else:
-                    ui.markdown('N/A')
-            
+
+            # Dynamically display all sections from the template, or fallback to all keys in analysis
+            try:
+                from src.rca_generator import rca_generator
+                template_sections = rca_generator.get_template_prompts()
+            except Exception:
+                template_sections = []
+
+            shown_keys = set()
+            if template_sections:
+                for section in template_sections:
+                    header = section['header']
+                    # Try to find a matching key in analysis (case-insensitive, underscores/space-insensitive)
+                    norm_header = header.lower().replace(" ", "_")
+                    key = None
+                    for k in analysis.keys():
+                        if k.lower().replace(" ", "_") == norm_header:
+                            key = k
+                            break
+                    value = analysis.get(key) if key else None
+                    shown_keys.add(key)
+                    with ui.card().classes('w-full mb-4'):
+                        ui.label(header).classes('text-lg font-semibold mb-2')
+                        if isinstance(value, list):
+                            for v in value:
+                                ui.markdown(f"• {v}")
+                        elif value is not None:
+                            ui.markdown(str(value))
+                        else:
+                            ui.markdown("N/A")
+            else:
+                # Fallback: show all keys in analysis
+                for k, v in analysis.items():
+                    with ui.card().classes('w-full mb-4'):
+                        ui.label(k.replace("_", " ").title()).classes('text-lg font-semibold mb-2')
+                        if isinstance(v, list):
+                            for item in v:
+                                ui.markdown(f"• {item}")
+                        else:
+                            ui.markdown(str(v))
+
+            # Show any remaining keys in analysis not already shown
+            for k, v in analysis.items():
+                if k in shown_keys:
+                    continue
+                with ui.card().classes('w-full mb-4'):
+                    ui.label(k.replace("_", " ").title()).classes('text-lg font-semibold mb-2')
+                    if isinstance(v, list):
+                        for item in v:
+                            ui.markdown(f"• {item}")
+                    else:
+                        ui.markdown(str(v))
+
             # Raw Response (if available)
             if analysis.get('raw_response'):
                 with ui.card().classes('w-full mb-4'):
@@ -304,7 +331,7 @@ class RCAApp:
                     ui.markdown("⚠️ **Note**: This analysis used fallback parsing due to JSON format issues.")
                     with ui.expansion('View Raw Response', icon='code').classes('w-full'):
                         ui.code(analysis['raw_response']).classes('w-full')
-            
+
             # Download Report
             with ui.card().classes('w-full mb-4'):
                 ui.label('Report Download').classes('text-lg font-semibold mb-2')
