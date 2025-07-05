@@ -23,6 +23,9 @@ def config_file(temp_dir):
     config.set('LLM', 'openai_base_url', 'https://api.openai.com/v1')
     config.set('LLM', 'anthropic_api_key', 'test_anthropic_key')
     config.set('LLM', 'anthropic_model', 'claude-3-5-sonnet-20241022')
+    config.set('LLM', 'openrouter_api_key', 'test_openrouter_key')
+    config.set('LLM', 'openrouter_model', 'anthropic/claude-3.5-sonnet')
+    config.set('LLM', 'openrouter_base_url', 'https://openrouter.ai/api/v1')
     config.set('LLM', 'default_llm', 'openai')
     
     config.add_section('JIRA')

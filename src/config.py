@@ -70,6 +70,9 @@ class Config:
             'openai_base_url': self.get('LLM', 'openai_base_url', 'https://api.openai.com/v1'),
             'anthropic_api_key': self.get('LLM', 'anthropic_api_key'),
             'anthropic_model': self.get('LLM', 'anthropic_model', 'claude-3-5-sonnet-20241022'),
+            'openrouter_api_key': self.get('LLM', 'openrouter_api_key'),
+            'openrouter_model': self.get('LLM', 'openrouter_model', 'anthropic/claude-3.5-sonnet'),
+            'openrouter_base_url': self.get('LLM', 'openrouter_base_url', 'https://openrouter.ai/api/v1'),
             'default_llm': self.get('LLM', 'default_llm', 'openai')
         }
     

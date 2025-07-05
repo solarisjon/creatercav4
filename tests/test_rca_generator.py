@@ -15,6 +15,9 @@ class TestRCAGenerator:
                 'openai_base_url': 'https://api.openai.com/v1',
                 'anthropic_api_key': 'test_anthropic_key',
                 'anthropic_model': 'claude-3-5-sonnet-20241022',
+                'openrouter_api_key': 'test_openrouter_key',
+                'openrouter_model': 'anthropic/claude-3.5-sonnet',
+                'openrouter_base_url': 'https://openrouter.ai/api/v1',
                 'default_llm': 'openai'
             }
             mock_config.app_config = {
@@ -355,6 +358,84 @@ class TestRCAGenerator:
             
             assert analysis == mock_openai_response
             mock_anthropic.assert_called_once()
+    
+    @pytest.mark.asyncio
+    async def test_generate_with_openrouter_success(self, rca_generator, mock_openai_response):
+        """Test successful analysis generation with OpenRouter"""
+        context = "Test context for analysis"
+        
+        with patch('src.rca_generator.openai.AsyncOpenAI') as mock_openai_class:
+            mock_client = AsyncMock()
+            mock_response = Mock()
+            mock_choice = Mock()
+            mock_message = Mock()
+            mock_message.content = json.dumps(mock_openai_response)
+            mock_choice.message = mock_message
+            mock_response.choices = [mock_choice]
+            mock_client.chat.completions.create.return_value = mock_response
+            mock_openai_class.return_value = mock_client
+            
+            analysis = await rca_generator._generate_with_openrouter(context)
+            
+            assert analysis == mock_openai_response
+            mock_client.chat.completions.create.assert_called_once()
+            
+            # Verify OpenRouter-specific headers were included
+            call_kwargs = mock_client.chat.completions.create.call_args[1]
+            assert 'extra_headers' in call_kwargs
+            assert 'HTTP-Referer' in call_kwargs['extra_headers']
+    
+    @pytest.mark.asyncio
+    async def test_generate_with_openrouter_error(self, rca_generator):
+        """Test OpenRouter analysis generation with error"""
+        context = "Test context"
+        
+        with patch('src.rca_generator.openai.AsyncOpenAI') as mock_openai_class:
+            mock_openai_class.side_effect = Exception("OpenRouter API error")
+            
+            with pytest.raises(Exception):
+                await rca_generator._generate_with_openrouter(context)
+    
+    @pytest.mark.asyncio
+    async def test_generate_analysis_openrouter_path(self, rca_generator, mock_openai_response):
+        """Test analysis generation using OpenRouter path"""
+        rca_generator.config['default_llm'] = 'openrouter'
+        source_data = {'files': {}, 'urls': {}, 'jira_tickets': {}}
+        issue_description = "Test issue"
+        
+        with patch.object(rca_generator, '_generate_with_openrouter') as mock_openrouter:
+            mock_openrouter.return_value = mock_openai_response
+            
+            analysis = await rca_generator._generate_analysis(source_data, issue_description)
+            
+            assert analysis == mock_openai_response
+            mock_openrouter.assert_called_once()
+    
+    @pytest.mark.asyncio
+    async def test_try_fallback_llms_success(self, rca_generator, mock_openai_response):
+        """Test successful fallback to different LLMs"""
+        context = "Test context"
+        
+        with patch.object(rca_generator, '_generate_with_anthropic') as mock_anthropic:
+            mock_anthropic.return_value = mock_openai_response
+            
+            analysis = await rca_generator._try_fallback_llms(['anthropic', 'openrouter'], context)
+            
+            assert analysis == mock_openai_response
+            mock_anthropic.assert_called_once()
+    
+    @pytest.mark.asyncio
+    async def test_try_fallback_llms_all_fail(self, rca_generator):
+        """Test when all fallback LLMs fail"""
+        context = "Test context"
+        
+        # Set all API keys to None to simulate missing keys
+        rca_generator.config['openai_api_key'] = None
+        rca_generator.config['anthropic_api_key'] = None
+        rca_generator.config['openrouter_api_key'] = None
+        
+        with pytest.raises(Exception, match="All LLM providers failed"):
+            await rca_generator._try_fallback_llms(['openai', 'anthropic', 'openrouter'], context)
     
     @pytest.mark.asyncio
     async def test_generate_analysis_unsupported_llm(self, rca_generator):

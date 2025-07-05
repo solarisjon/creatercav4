@@ -9,7 +9,7 @@ A modern web-based Root Cause Analysis (RCA) tool that leverages Model Context P
 - **Modern Web UI**: Built with NiceGUI for responsive, interactive experience
 - **Automated Jira Integration**: Create escalation and defect tickets automatically
 - **Comprehensive Analysis**: Generate detailed RCA reports with LLM assistance
-- **Configurable LLM Support**: Works with OpenAI GPT and Anthropic Claude models
+- **Multi-LLM Support**: Works with OpenAI GPT, Anthropic Claude, and OpenRouter models
 - **Comprehensive Testing**: Full unit test coverage for reliable operation
 
 ## Architecture
@@ -51,7 +51,7 @@ The application uses `config.ini` for all configuration settings:
 ```ini
 [LLM]
 # Choose your preferred LLM
-default_llm = anthropic  # or openai
+default_llm = anthropic  # or openai or openrouter
 
 # OpenAI Configuration
 openai_api_key = your_openai_key_here
@@ -60,6 +60,11 @@ openai_model = gpt-4o
 # Anthropic Configuration  
 anthropic_api_key = your_anthropic_key_here
 anthropic_model = claude-3-5-sonnet-20241022
+
+# OpenRouter Configuration (access to many models)
+openrouter_api_key = your_openrouter_key_here
+openrouter_model = anthropic/claude-3.5-sonnet
+# Available models: gpt-4, claude-3.5-sonnet, llama-3, etc.
 ```
 
 ### Jira Configuration
@@ -175,6 +180,28 @@ The RCA analysis can be extended by:
 - Adding new output formats
 - Writing tests for new functionality
 
+## LLM Providers
+
+### OpenRouter Integration
+
+OpenRouter provides access to multiple LLM models through a single API:
+
+**Popular Models Available:**
+- `anthropic/claude-3.5-sonnet` - Latest Claude model
+- `openai/gpt-4o` - OpenAI's flagship model  
+- `meta-llama/llama-3-70b-instruct` - Open source alternative
+- `google/gemini-pro` - Google's advanced model
+- `mistralai/mixtral-8x7b-instruct` - Fast and efficient
+
+**Benefits:**
+- Single API key for multiple models
+- Competitive pricing across providers
+- Automatic fallback between models
+- No need for separate accounts with each provider
+
+**Usage:**
+Set `default_llm = openrouter` in config.ini and choose your preferred model in `openrouter_model`.
+
 ## MCP Servers
 
 The application supports multiple MCP servers:
@@ -255,7 +282,8 @@ python main.py --help
 2. **LLM API Errors**
    - Check API keys in `config.ini`
    - Verify quota/billing status
-   - Switch between OpenAI/Anthropic in config
+   - Switch between OpenAI/Anthropic/OpenRouter in config
+   - OpenRouter provides access to multiple models with unified billing
 
 3. **File Upload Issues**
    - Check file size limits in config

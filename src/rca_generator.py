@@ -128,22 +128,20 @@ class RCAGenerator:
                 try:
                     analysis = await self._generate_with_openai(context)
                 except Exception as e:
-                    logger.warning(f"OpenAI failed: {e}. Trying Anthropic as fallback...")
-                    if self.config.get('anthropic_api_key'):
-                        analysis = await self._generate_with_anthropic(context)
-                    else:
-                        logger.error("No Anthropic API key available for fallback")
-                        raise
+                    logger.warning(f"OpenAI failed: {e}. Trying fallback...")
+                    analysis = await self._try_fallback_llms(['anthropic', 'openrouter'], context)
             elif self.config['default_llm'] == 'anthropic':
                 try:
                     analysis = await self._generate_with_anthropic(context)
                 except Exception as e:
-                    logger.warning(f"Anthropic failed: {e}. Trying OpenAI as fallback...")
-                    if self.config.get('openai_api_key'):
-                        analysis = await self._generate_with_openai(context)
-                    else:
-                        logger.error("No OpenAI API key available for fallback")
-                        raise
+                    logger.warning(f"Anthropic failed: {e}. Trying fallback...")
+                    analysis = await self._try_fallback_llms(['openrouter', 'openai'], context)
+            elif self.config['default_llm'] == 'openrouter':
+                try:
+                    analysis = await self._generate_with_openrouter(context)
+                except Exception as e:
+                    logger.warning(f"OpenRouter failed: {e}. Trying fallback...")
+                    analysis = await self._try_fallback_llms(['anthropic', 'openai'], context)
             else:
                 raise ValueError(f"Unsupported LLM: {self.config['default_llm']}")
             
@@ -356,6 +354,111 @@ class RCAGenerator:
         except Exception as e:
             logger.error(f"Failed to generate analysis with Anthropic: {e}")
             raise
+    
+    async def _generate_with_openrouter(self, context: str) -> Dict[str, Any]:
+        """Generate analysis using OpenRouter"""
+        try:
+            import openai
+            
+            client = openai.AsyncOpenAI(
+                api_key=self.config['openrouter_api_key'],
+                base_url=self.config['openrouter_base_url']
+            )
+            
+            prompt = f"""
+            Based on the provided context, generate a comprehensive Root Cause Analysis (RCA) report. 
+            Structure your response as a JSON object with the following fields:
+            
+            {{
+                "executive_summary": "Brief summary of the issue and findings",
+                "problem_statement": "Clear statement of the problem",
+                "timeline": "Chronological sequence of events",
+                "root_cause": "Primary root cause identified",
+                "contributing_factors": ["List of contributing factors"],
+                "impact_assessment": "Assessment of impact",
+                "corrective_actions": ["List of immediate corrective actions"],
+                "preventive_measures": ["List of preventive measures for the future"],
+                "recommendations": ["List of recommendations"],
+                "escalation_needed": "true/false - whether escalation is needed",
+                "defect_tickets_needed": "true/false - whether defect tickets should be created",
+                "severity": "Critical/High/Medium/Low",
+                "priority": "P1/P2/P3/P4"
+            }}
+            
+            Context:
+            {context}
+            """
+            
+            response = await client.chat.completions.create(
+                model=self.config['openrouter_model'],
+                messages=[
+                    {"role": "system", "content": "You are an expert technical analyst specializing in root cause analysis."},
+                    {"role": "user", "content": prompt}
+                ],
+                temperature=0.3,
+                max_tokens=4000,
+                extra_headers={
+                    "HTTP-Referer": "https://github.com/solarisjon/creatercav4",
+                    "X-Title": "MCP RCA Tool"
+                }
+            )
+            
+            # Parse JSON response
+            analysis_text = response.choices[0].message.content
+            logger.debug(f"OpenRouter response content: {analysis_text}")
+            
+            if not analysis_text or analysis_text.strip() == "":
+                logger.error("OpenRouter returned empty response")
+                raise ValueError("Empty response from OpenRouter")
+            
+            try:
+                analysis = json.loads(analysis_text)
+            except json.JSONDecodeError as e:
+                logger.error(f"Failed to parse JSON response: {e}")
+                logger.error(f"Raw response: {analysis_text}")
+                
+                # Try to extract JSON from response if it's wrapped in text
+                import re
+                json_match = re.search(r'\{.*\}', analysis_text, re.DOTALL)
+                if json_match:
+                    try:
+                        analysis = json.loads(json_match.group())
+                        logger.info("Successfully extracted JSON from response")
+                    except json.JSONDecodeError:
+                        # Fallback: create a basic analysis structure
+                        analysis = self._create_fallback_analysis(analysis_text)
+                else:
+                    # Fallback: create a basic analysis structure
+                    analysis = self._create_fallback_analysis(analysis_text)
+            
+            return analysis
+            
+        except Exception as e:
+            logger.error(f"Failed to generate analysis with OpenRouter: {e}")
+            raise
+    
+    async def _try_fallback_llms(self, fallback_order: List[str], context: str) -> Dict[str, Any]:
+        """Try fallback LLMs in order until one succeeds"""
+        for llm_name in fallback_order:
+            try:
+                logger.info(f"Trying fallback LLM: {llm_name}")
+                
+                if llm_name == 'openai' and self.config.get('openai_api_key'):
+                    return await self._generate_with_openai(context)
+                elif llm_name == 'anthropic' and self.config.get('anthropic_api_key'):
+                    return await self._generate_with_anthropic(context)
+                elif llm_name == 'openrouter' and self.config.get('openrouter_api_key'):
+                    return await self._generate_with_openrouter(context)
+                else:
+                    logger.warning(f"No API key available for {llm_name}")
+                    continue
+                    
+            except Exception as e:
+                logger.warning(f"Fallback LLM {llm_name} failed: {e}")
+                continue
+        
+        # If all fallbacks fail, raise the last exception
+        raise Exception("All LLM providers failed to generate analysis")
     
     def _create_fallback_analysis(self, raw_text: str) -> Dict[str, Any]:
         """Create a fallback analysis structure when JSON parsing fails"""
