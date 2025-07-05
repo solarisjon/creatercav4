@@ -109,11 +109,12 @@ class RCAGenerator:
             raise
     
     async def _collect_source_data(self, files: List[str], urls: List[str], jira_tickets: List[str]) -> Dict[str, Any]:
-        """Collect data from all sources"""
+        """Collect data from all sources, and for Jira tickets, also fetch linked issues."""
         source_data = {
             'files': {},
             'urls': {},
             'jira_tickets': {},
+            'jira_linked_issues': {},
             'summary': ''
         }
         
@@ -151,7 +152,7 @@ class RCAGenerator:
                 logger.error(f"Failed to scrape URL {url}: {e}")
                 source_data['urls'][url] = {'error': str(e)}
         
-        # Process Jira tickets
+        # Process Jira tickets and collect linked issues
         for ticket_id in jira_tickets:
             try:
                 # Search for specific ticket
@@ -159,8 +160,38 @@ class RCAGenerator:
                 tickets = await mcp_client.search_jira_tickets(jql, max_results=1)
                 
                 if tickets:
-                    source_data['jira_tickets'][ticket_id] = tickets[0]
+                    ticket = tickets[0]
+                    source_data['jira_tickets'][ticket_id] = ticket
                     logger.info(f"Retrieved Jira ticket: {ticket_id}")
+
+                    # Look for linked issues in the ticket fields
+                    linked_issues = []
+                    fields = ticket.get('fields', {})
+                    issuelinks = fields.get('issuelinks', [])
+                    for link in issuelinks:
+                        # Outward issue
+                        if 'outwardIssue' in link:
+                            linked = link['outwardIssue']
+                            linked_issues.append({
+                                'key': linked.get('key'),
+                                'summary': linked.get('fields', {}).get('summary', ''),
+                                'type': linked.get('fields', {}).get('issuetype', {}).get('name', ''),
+                                'direction': 'outward',
+                                'link_type': link.get('type', {}).get('name', '')
+                            })
+                        # Inward issue
+                        if 'inwardIssue' in link:
+                            linked = link['inwardIssue']
+                            linked_issues.append({
+                                'key': linked.get('key'),
+                                'summary': linked.get('fields', {}).get('summary', ''),
+                                'type': linked.get('fields', {}).get('issuetype', {}).get('name', ''),
+                                'direction': 'inward',
+                                'link_type': link.get('type', {}).get('name', '')
+                            })
+                    if linked_issues:
+                        source_data['jira_linked_issues'][ticket_id] = linked_issues
+                        logger.info(f"Found {len(linked_issues)} linked issues for {ticket_id}")
                 else:
                     source_data['jira_tickets'][ticket_id] = {'error': 'Ticket not found'}
                     

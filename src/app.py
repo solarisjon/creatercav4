@@ -92,7 +92,7 @@ class RCAApp:
                 ui.label('Jira Tickets').classes('text-lg font-semibold mb-2')
                 with ui.row().classes('w-full'):
                     self.ticket_input = ui.input('Enter Jira Ticket ID (e.g., CPE-1234)').classes('flex-grow')
-                    ui.button('Add Ticket', on_click=self.add_jira_ticket).classes('ml-2')
+                    ui.button('Add Ticket', on_click=lambda: self.add_jira_ticket()).classes('ml-2')
                 
                 # Display Jira tickets
                 self.tickets_list = ui.column().classes('mt-2')
@@ -153,19 +153,73 @@ class RCAApp:
         else:
             ui.notify('Please enter a valid URL', type='negative')
     
-    def add_jira_ticket(self):
-        """Add Jira ticket to list"""
+    async def add_jira_ticket(self):
+        """Add Jira ticket to list and fetch linked issues for user selection"""
         ticket = self.ticket_input.value.strip().upper()
-        if ticket:
-            if ticket not in self.jira_tickets:
-                self.jira_tickets.append(ticket)
-                self.update_tickets_display()
-                ui.notify(f'Jira ticket added: {ticket}', type='positive')
-            else:
-                ui.notify('Ticket already added', type='warning')
-            self.ticket_input.value = ''
-        else:
+        if not ticket:
             ui.notify('Please enter a valid Jira ticket ID', type='negative')
+            return
+
+        if ticket in self.jira_tickets:
+            ui.notify('Ticket already added', type='warning')
+            self.ticket_input.value = ''
+            return
+
+        # Fetch linked issues using RCA generator's source data collection
+        try:
+            from src.rca_generator import rca_generator
+            source_data = await rca_generator._collect_source_data([], [], [ticket])
+            linked_issues = source_data.get('jira_linked_issues', {}).get(ticket, [])
+        except Exception as e:
+            logger.error(f"Failed to fetch linked issues for {ticket}: {e}")
+            linked_issues = []
+
+        # Add the main ticket
+        self.jira_tickets.append(ticket)
+        self.update_tickets_display()
+        ui.notify(f'Jira ticket added: {ticket}', type='positive')
+        self.ticket_input.value = ''
+
+        # If there are linked issues, show a checklist dialog
+        if linked_issues:
+            await self.show_linked_issues_dialog(linked_issues)
+
+    async def show_linked_issues_dialog(self, linked_issues):
+        """Show a dialog with a checklist of linked issues for user to add"""
+        selected = set()
+
+        def on_change(issue_key, checked):
+            if checked:
+                selected.add(issue_key)
+            else:
+                selected.discard(issue_key)
+
+        async def on_confirm():
+            added = 0
+            for issue in linked_issues:
+                if issue['key'] in selected and issue['key'] not in self.jira_tickets:
+                    self.jira_tickets.append(issue['key'])
+                    added += 1
+            self.update_tickets_display()
+            ui.notify(f"Added {added} linked Jira issues", type='positive')
+            dialog.close()
+
+        dialog = ui.dialog().props('persistent')
+        with dialog:
+            ui.label('Add Linked Jira Issues').classes('text-lg font-semibold mb-2')
+            ui.markdown('Select linked issues to add for analysis:')
+            for issue in linked_issues:
+                key = issue.get('key', '')
+                summary = issue.get('summary', '')
+                link_type = issue.get('link_type', '')
+                direction = issue.get('direction', '')
+                label = f"{key} ({link_type}, {direction}) - {summary}"
+                checkbox = ui.checkbox(label)
+                checkbox.on('update:model-value', lambda e, k=key: on_change(k, e.value))
+            with ui.row():
+                ui.button('Add Selected', on_click=on_confirm).props('color=primary')
+                ui.button('Cancel', on_click=dialog.close)
+        dialog.open()
     
     def update_files_display(self):
         """Update the files display"""
