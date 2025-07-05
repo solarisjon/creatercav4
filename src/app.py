@@ -165,16 +165,21 @@ class RCAApp:
             self.ticket_input.value = ''
             return
 
-        # Fetch linked issues using RCA generator's source data collection
+        # Fetch linked issues using MCP client directly for accurate grouping
         try:
-            from src.rca_generator import rca_generator
-            source_data = await rca_generator._collect_source_data([], [], [ticket])
-            linked_issues = source_data.get('jira_linked_issues', {}).get(ticket, [])
+            from src.mcp_client import mcp_client
+            grouped = await mcp_client.get_linked_issues_grouped(ticket)
+            # Flatten grouped dict into a list of dicts with link_type and direction
+            linked_issues = []
+            for link_type, issues in grouped.items():
+                for issue in issues:
+                    issue['link_type'] = link_type
+                    linked_issues.append(issue)
         except Exception as e:
             logger.error(f"Failed to fetch linked issues for {ticket}: {e}")
             linked_issues = []
 
-        # Always show a dialog, even if no linked issues, for confirmation and possible future file upload
+        # Always show a dialog, even if no linked issues, for confirmation
         await self.show_linked_issues_dialog(linked_issues, main_ticket=ticket)
 
     async def show_linked_issues_dialog(self, linked_issues, main_ticket=None):
