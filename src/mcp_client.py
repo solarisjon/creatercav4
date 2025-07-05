@@ -4,6 +4,22 @@ import logging
 from typing import Dict, Any, List, Optional
 from pathlib import Path
 import httpx
+import platform
+import os
+import urllib3
+
+# Configure SSL certificates
+urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
+platformtype = platform.system()
+
+if platformtype == "Linux":
+    os.environ['REQUESTS_CA_BUNDLE'] = "/etc/ssl/certs/ca-certificates.crt"
+    os.environ['SSL_CERT_FILE'] = "/etc/ssl/certs/ca-certificates.crt"
+elif platformtype == "Darwin":
+    pem_path = "/usr/local/etc/openssl@3/certs/../cert.pem"
+    os.environ['REQUESTS_CA_BUNDLE'] = pem_path
+    os.environ['SSL_CERT_FILE'] = pem_path
+
 from mcp import ClientSession, StdioServerParameters
 from mcp.client.stdio import stdio_client
 from src.config import config
@@ -181,11 +197,15 @@ class MCPClient:
             
             jira_config = config.jira_config
             
-            # Create Jira client
+            # Use Bearer token authentication (like escalation_metrics)
+            headers = {
+                'Authorization': f'Bearer {jira_config["api_token"]}'
+            }
             jira = JIRA(
                 server=jira_config['url'],
-                basic_auth=(jira_config['username'], jira_config['api_token'])
+                options={'headers': headers, 'verify': False}
             )
+            logger.info("Successfully authenticated with Bearer token")
             
             # Create issue
             issue = jira.create_issue(
@@ -210,11 +230,15 @@ class MCPClient:
             
             jira_config = config.jira_config
             
-            # Create Jira client
+            # Use Bearer token authentication (like escalation_metrics)
+            headers = {
+                'Authorization': f'Bearer {jira_config["api_token"]}'
+            }
             jira = JIRA(
                 server=jira_config['url'],
-                basic_auth=(jira_config['username'], jira_config['api_token'])
+                options={'headers': headers, 'verify': False}
             )
+            logger.info("Successfully authenticated with Bearer token")
             
             # Search issues
             issues = jira.search_issues(jql, maxResults=max_results)

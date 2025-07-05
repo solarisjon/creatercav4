@@ -85,6 +85,7 @@ class Config:
         return {
             'url': self.get('JIRA', 'jira_url'),
             'username': self.get('JIRA', 'jira_username'),
+            'password': self.get('JIRA', 'jira_password', ''),
             'api_token': self.get('JIRA', 'jira_api_token'),
             'project_key': self.get('JIRA', 'jira_project_key', 'CPE'),
             'escalation_project': self.get('JIRA', 'jira_escalation_project', 'CPE'),
