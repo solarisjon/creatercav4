@@ -30,7 +30,7 @@ def main():
         logger.info("Starting MCP-based RCA Tool")
         
         # Import the app module to register routes
-        from src.app import create_app
+        from src.app import create_app, rca_app
         
         # Create and configure the app
         app = create_app()
@@ -41,6 +41,12 @@ def main():
         
         logger.info(f"Starting server on {host}:{port}")
         
+        # Patch NiceGUI to support async add_jira_ticket (for linked issues dialog)
+        # This is needed because NiceGUI expects sync handlers by default
+        # We patch the button in the UI creation to call the async method
+        # (see src/app.py for lambda: self.add_jira_ticket())
+        # No further action needed here, but this comment documents the async support
+
         # Run the application
         ui.run(
             host=host,
