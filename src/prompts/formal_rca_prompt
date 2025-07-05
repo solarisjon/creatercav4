@@ -32,7 +32,7 @@ You are an expert technical analyst. Your task is to extract key fields and gene
 **Guidelines:**
 - If a field is not found, return an empty string or empty list for that field.
 - Be concise and factual for extracted fields.
-- For summary fields, write in clear, professional English.
+- For summary fields (such as "executive_summary" and "problem_summary"), write in clear, professional English and ensure you use as much relevant detail as possible from the provided context. Each summary should be at least 3-5 paragraphs, and should reference specific events, facts, or data points from the files, Jira tickets, and web content. Where possible, include direct quotes or data points from the context.
 - Do not invent data; only use what is present in the context.
 
 **Example Output:**
