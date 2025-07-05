@@ -115,6 +115,7 @@ class RCAApp:
                 with ui.row().classes('w-full'):
                     ui.button('Generate RCA Report', on_click=self.generate_analysis).classes('netapp-btn-primary')
                     ui.button('Clear All', on_click=self.clear_all).classes('ml-2 netapp-btn-secondary')
+                    ui.button('Reset Context', on_click=self.reset_context).classes('ml-2 netapp-btn-secondary')
                 self.progress_bar = ui.linear_progress(value=0).classes('w-full mt-2')
                 self.progress_bar.visible = False
                 self.results_container = ui.column().classes('w-full mt-4')
@@ -447,6 +448,11 @@ class RCAApp:
         self.results_container.clear()
         
         ui.notify('All data cleared', type='info')
+
+    def reset_context(self):
+        """Reset the context for a new RCA session (clears all files, URLs, tickets, and results)"""
+        self.clear_all()
+        ui.notify('Context has been reset. You can now start a new RCA without any previous data.', type='info')
 
 # Global app instance
 rca_app = RCAApp()
