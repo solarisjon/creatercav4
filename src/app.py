@@ -453,7 +453,28 @@ class RCAApp:
                     if kt_table:
                         with ui.card().classes('w-full mb-4'):
                             ui.label("Problem Assessment Table").classes('text-lg font-semibold mb-2')
-                            if isinstance(kt_table, list):
+                            # If markdown table, render as markdown
+                            if isinstance(kt_table, str) and "|" in kt_table and kt_table.count("|") > 2:
+                                ui.markdown(kt_table)
+                            # If HTML table, render as HTML
+                            elif isinstance(kt_table, str) and "<table" in kt_table:
+                                ui.html(kt_table)
+                            # If CSV string, parse and render as table
+                            elif isinstance(kt_table, str):
+                                import csv
+                                from io import StringIO
+                                reader = csv.reader(StringIO(kt_table))
+                                rows = list(reader)
+                                if rows:
+                                    headers = rows[0]
+                                    data_rows = [dict(zip(headers, row)) for row in rows[1:]]
+                                    ui.table(columns=[{"name": h, "label": h, "field": h} for h in headers],
+                                             rows=data_rows,
+                                             row_key=headers[0] if headers else None).classes('w-full')
+                                else:
+                                    ui.markdown(kt_table)
+                            # If list of dicts or list of lists
+                            elif isinstance(kt_table, list):
                                 if len(kt_table) > 0:
                                     if isinstance(kt_table[0], dict):
                                         headers = list(kt_table[0].keys())
@@ -466,25 +487,6 @@ class RCAApp:
                                         ui.table(columns=[{"name": h, "label": h, "field": h} for h in headers],
                                                  rows=rows,
                                                  row_key=headers[0] if headers else None).classes('w-full')
-                            elif isinstance(kt_table, str):
-                                # Try markdown table, HTML table, or CSV
-                                if "|" in kt_table:
-                                    ui.markdown(kt_table)
-                                elif "<table" in kt_table:
-                                    ui.html(kt_table)
-                                else:
-                                    import csv
-                                    from io import StringIO
-                                    reader = csv.reader(StringIO(kt_table))
-                                    rows = list(reader)
-                                    if rows:
-                                        headers = rows[0]
-                                        data_rows = [dict(zip(headers, row)) for row in rows[1:]]
-                                        ui.table(columns=[{"name": h, "label": h, "field": h} for h in headers],
-                                                 rows=data_rows,
-                                                 row_key=headers[0] if headers else None).classes('w-full')
-                                    else:
-                                        ui.markdown(kt_table)
                 # Render any markdown or HTML tables in any section (for all prompt types)
                 for header, key in sections:
                     value = analysis.get(key)
