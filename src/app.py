@@ -43,11 +43,26 @@ class RCAApp:
             ("Recommendations", "recommendations"),
         ],
         "kt-analysis_prompt": [
+            ("Problem Statement", "problem_statement"),
             ("Problem Description", "problem_description"),
+            ("Problem Analysis", "problem_analysis"),
+            ("Problem Details", "problem_details"),
+            ("Problem History", "problem_history"),
+            ("Cause Analysis", "cause_analysis"),
+            ("Potential Causes", "potential_causes"),
             ("Possible Causes", "possible_causes"),
-            ("Data Collection", "data_collection"),
+            ("Validation of Causes", "validation_of_causes"),
+            ("Root Cause Identification", "root_cause_identification"),
             ("Root Cause", "root_cause"),
+            ("Solution Development", "solution_development"),
+            ("Possible Solutions", "possible_solutions"),
+            ("Solution Evaluation", "solution_evaluation"),
+            ("Recommended Solution", "recommended_solution"),
             ("Solution", "solution"),
+            ("Action Plan", "action_plan"),
+            ("Follow-up", "follow_up"),
+            ("Problem Assessment", "problem_assessment"),
+            ("Data Collection", "data_collection"),
         ],
     }
     PROMPT_OPTIONS = [
@@ -382,14 +397,84 @@ class RCAApp:
             logger.info(f"Current selected_prompt: {self.selected_prompt}")
             logger.info(f"Analysis keys: {list(self.analysis_result.get('analysis', {}).keys())}")
             
+            # Special debug logging for KT analysis
+            if prompt_file == "kt-analysis_prompt":
+                analysis = self.analysis_result['analysis']
+                logger.info("=== KT ANALYSIS DEBUG ===")
+                for key, value in analysis.items():
+                    if key not in ['sources_used', 'raw_response', 'raw_analysis']:
+                        logger.info(f"KT Key: '{key}' -> Value: {str(value)[:100]}...")
+                logger.info("=== END KT DEBUG ===")
+            
             # Use the predefined PROMPT_REPORT_MAP instead of dynamic parsing
             section_mapping = self.PROMPT_REPORT_MAP.get(prompt_file, [])
             
-            # If no predefined mapping exists, fallback to analysis keys
-            if not section_mapping:
-                logger.warning(f"No predefined mapping found for prompt: {prompt_file}, using analysis keys")
+            # If no predefined mapping exists, or for KT analysis, try intelligent section detection
+            if not section_mapping or prompt_file == "kt-analysis_prompt":
+                logger.warning(f"Using intelligent section detection for prompt: {prompt_file}")
                 analysis = self.analysis_result['analysis']
-                section_mapping = [(k.replace("_", " ").title(), k) for k in analysis.keys() if k != "raw_analysis"]
+                
+                # For KT analysis, try to detect numbered sections
+                if prompt_file == "kt-analysis_prompt":
+                    detected_mapping = []
+                    
+                    # Look for keys that might be KT sections
+                    for key in analysis.keys():
+                        if key in ['sources_used', 'raw_response', 'raw_analysis']:
+                            continue
+                            
+                        # Convert key to a readable header
+                        header = key.replace("_", " ").title()
+                        
+                        # Special handling for common KT terms
+                        if "problem" in key.lower():
+                            if "statement" in key.lower():
+                                header = "Problem Statement"
+                            elif "description" in key.lower():
+                                header = "Problem Description"
+                            elif "analysis" in key.lower():
+                                header = "Problem Analysis"
+                            elif "details" in key.lower():
+                                header = "Problem Details"
+                            elif "history" in key.lower():
+                                header = "Problem History"
+                            elif "assessment" in key.lower():
+                                header = "Problem Assessment"
+                        elif "cause" in key.lower():
+                            if "root" in key.lower():
+                                header = "Root Cause"
+                            elif "potential" in key.lower() or "possible" in key.lower():
+                                header = "Potential Causes"
+                            elif "validation" in key.lower():
+                                header = "Validation of Causes"
+                            elif "analysis" in key.lower():
+                                header = "Cause Analysis"
+                        elif "solution" in key.lower():
+                            if "development" in key.lower():
+                                header = "Solution Development"
+                            elif "evaluation" in key.lower():
+                                header = "Solution Evaluation"
+                            elif "recommended" in key.lower():
+                                header = "Recommended Solution"
+                            elif "possible" in key.lower():
+                                header = "Possible Solutions"
+                            else:
+                                header = "Solution"
+                        elif "action" in key.lower() and "plan" in key.lower():
+                            header = "Action Plan"
+                        elif "follow" in key.lower():
+                            header = "Follow-up"
+                        
+                        detected_mapping.append((header, key))
+                    
+                    # Use detected mapping if we found KT-style sections
+                    if detected_mapping:
+                        section_mapping = detected_mapping
+                        logger.info(f"Detected {len(detected_mapping)} KT sections: {[h for h, k in detected_mapping]}")
+                
+                # Fallback to analysis keys if no mapping found
+                if not section_mapping:
+                    section_mapping = [(k.replace("_", " ").title(), k) for k in analysis.keys() if k != "raw_analysis"]
             
             ui.label(f"Report: {prompt_file.replace('_', ' ').title()}").classes('text-xl font-semibold mb-4')
 
@@ -420,6 +505,29 @@ class RCAApp:
                         header.lower().replace(" ", "_"),
                         header.lower().replace(" ", ""),
                     ]
+                    
+                    # For KT analysis, also try numbered variations
+                    if prompt_file == "kt-analysis_prompt":
+                        # Try with numbers and sub-numbers (e.g., "1. Problem Statement", "2.1. Problem Details")
+                        header_words = header.lower().split()
+                        if header_words:
+                            # Try just the main words without articles
+                            main_words = [w for w in header_words if w not in ['the', 'a', 'an', 'of', 'for', 'to', 'in', 'on', 'at']]
+                            possible_keys.extend([
+                                "_".join(main_words),
+                                "".join(main_words),
+                                " ".join(main_words),
+                            ])
+                        
+                        # Try partial matches for compound headers
+                        for key in analysis.keys():
+                            key_lower = key.lower().replace("_", " ")
+                            header_lower = header.lower()
+                            # Check if any significant words match
+                            key_words = set(key_lower.split())
+                            header_words = set(header_lower.split())
+                            if len(key_words.intersection(header_words)) >= min(2, len(header_words)):
+                                possible_keys.append(key)
                     
                     for possible_key in possible_keys:
                         if possible_key in analysis:
