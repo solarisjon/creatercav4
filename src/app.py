@@ -136,19 +136,14 @@ class RCAApp:
 
             # Analysis Section
             with ui.card().classes('w-full mb-4 netapp-card'):
-                ui.label('Generate Analysis').classes('text-lg font-semibold mb-2 text-[#0067c5]')
+                ui.label('Generate Report').classes('text-lg font-semibold mb-2 text-[#0067c5]')
                 with ui.row().classes('w-full'):
-                    ui.button('Generate RCA Report', on_click=self.generate_analysis).classes('netapp-btn-primary')
+                    ui.button('Generate Report', on_click=self.generate_analysis).classes('netapp-btn-primary')
                     ui.button('Clear All', on_click=self.clear_all).classes('ml-2 netapp-btn-secondary')
                     ui.button('Reset Context', on_click=self.reset_context).classes('ml-2 netapp-btn-secondary')
                 self.progress_bar = ui.linear_progress(value=0).classes('w-full mt-2')
                 self.progress_bar.visible = False
                 self.results_container = ui.column().classes('w-full mt-4')
-
-                # Add buttons to read Executive Summary and Problem Issue sections
-                with ui.row().classes('w-full mt-2'):
-                    ui.button('Read Executive Summary', on_click=self.read_executive_summary).classes('netapp-btn-secondary')
-                    ui.button('Read Problem Issue', on_click=self.read_problem_issue).classes('ml-2 netapp-btn-secondary')
 
             # Chat/Agentic RCA Refinement Section
             with ui.card().classes('w-full mb-4 netapp-card'):
@@ -386,16 +381,16 @@ class RCAApp:
         self.results_container.clear()
 
         with self.results_container:
-            ui.label('Analysis Results').classes('text-xl font-semibold mb-4')
+            # Show a dynamic title based on the selected prompt
+            prompt_titles = {
+                "formal_rca_prompt": "Formal Root Cause Analysis",
+                "initial_analysis_prompt": "Overview Analysis",
+                "kt-analysis_prompt": "Problem Assessment"
+            }
+            title = prompt_titles.get(self.selected_prompt, "Analysis Results")
+            ui.label(title).classes('text-xl font-semibold mb-4')
 
             analysis = self.analysis_result['analysis']
-
-            # Dynamically display all sections from the template, or fallback to all keys in analysis
-            try:
-                from src.rca_generator import rca_generator
-                template_sections = rca_generator.get_template_prompts()
-            except Exception:
-                template_sections = []
 
             # Show sources used at the top
             sources = analysis.get("sources_used")
@@ -405,74 +400,56 @@ class RCAApp:
                     for src in sources:
                         ui.markdown(f"- {src}")
 
-            shown_keys = set()
-            # Add synonym mapping for template fields
-            synonym_map = {
-                "customer": ["customer", "customer_name", "client", "account"],
-                "cases": ["cases", "case", "support_case", "support_cases", "tickets", "jira_tickets"],
-                "synopsis": ["synopsis", "summary", "executive_summary", "overview", "description"],
-                "issue_tracking_number": ["issue_tracking_number", "case", "cases", "support_case", "sap_case", "tracking_number"],
-            }
-            if template_sections:
-                for section in template_sections:
-                    header = section['header']
-                    # Try to find a matching key in analysis (case-insensitive, underscores/space-insensitive)
-                    norm_header = header.lower().replace(" ", "_")
-                    key = None
-                    # Try direct match
-                    for k in analysis.keys():
-                        if k.lower().replace(" ", "_") == norm_header:
-                            key = k
-                            break
-                    # Try synonyms if direct match fails
-                    if key is None:
-                        for syn_header, syn_list in synonym_map.items():
-                            if norm_header == syn_header:
-                                for syn in syn_list:
-                                    for k in analysis.keys():
-                                        if k.lower().replace(" ", "_") == syn:
-                                            key = k
-                                            break
-                                    if key:
-                                        break
-                            if key:
-                                break
-                    # Only show if not already shown
-                    if key is not None and key not in shown_keys:
-                        value = analysis.get(key)
-                        shown_keys.add(key)
-                        with ui.card().classes('w-full mb-4'):
-                            ui.label(header).classes('text-lg font-semibold mb-2')
-                            if isinstance(value, list):
-                                for v in value:
-                                    ui.markdown(f"• {v}")
-                            elif value is not None:
-                                ui.markdown(str(value))
-                            else:
-                                ui.markdown("N/A")
+            # Display sections based on the selected prompt
+            if self.selected_prompt == "formal_rca_prompt":
+                # Show all major RCA sections
+                sections = [
+                    ("Executive Summary", "executive_summary"),
+                    ("Problem Statement", "problem_statement"),
+                    ("Timeline", "timeline"),
+                    ("Root Cause", "root_cause"),
+                    ("Contributing Factors", "contributing_factors"),
+                    ("Impact Assessment", "impact_assessment"),
+                    ("Corrective Actions", "corrective_actions"),
+                    ("Preventive Measures", "preventive_measures"),
+                    ("Recommendations", "recommendations"),
+                    ("Escalation Needed", "escalation_needed"),
+                    ("Defect Tickets Needed", "defect_tickets_needed"),
+                    ("Severity", "severity"),
+                    ("Priority", "priority"),
+                ]
+            elif self.selected_prompt == "initial_analysis_prompt":
+                sections = [
+                    ("Overview", "overview"),
+                    ("Key Findings", "key_findings"),
+                    ("Summary", "summary"),
+                    ("Recommendations", "recommendations"),
+                ]
+            elif self.selected_prompt == "kt-analysis_prompt":
+                sections = [
+                    ("Problem Description", "problem_description"),
+                    ("Possible Causes", "possible_causes"),
+                    ("Data Collection", "data_collection"),
+                    ("Root Cause", "root_cause"),
+                    ("Solution", "solution"),
+                ]
             else:
                 # Fallback: show all keys in analysis
-                for k, v in analysis.items():
-                    with ui.card().classes('w-full mb-4'):
-                        ui.label(k.replace("_", " ").title()).classes('text-lg font-semibold mb-2')
-                        if isinstance(v, list):
-                            for item in v:
-                                ui.markdown(f"• {item}")
-                        else:
-                            ui.markdown(str(v))
+                sections = [(k.replace("_", " ").title(), k) for k in analysis.keys()]
 
-            # Do NOT show any remaining keys in analysis not already shown (prevents duplicate output)
-            # (If you want to show them, uncomment below)
-            # for k, v in analysis.items():
-            #     if k in shown_keys:
-            #         continue
-            #     with ui.card().classes('w-full mb-4'):
-            #         ui.label(k.replace("_", " ").title()).classes('text-lg font-semibold mb-2')
-            #         if isinstance(v, list):
-            #             for item in v:
-            #                 ui.markdown(f"• {item}")
-            #         else:
-            #             ui.markdown(str(v))
+            shown_keys = set()
+            for header, key in sections:
+                value = analysis.get(key)
+                shown_keys.add(key)
+                with ui.card().classes('w-full mb-4'):
+                    ui.label(header).classes('text-lg font-semibold mb-2')
+                    if isinstance(value, list):
+                        for v in value:
+                            ui.markdown(f"• {v}")
+                    elif value is not None:
+                        ui.markdown(str(value))
+                    else:
+                        ui.markdown("N/A")
 
             # Raw Response (if available)
             if analysis.get('raw_response'):
