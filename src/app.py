@@ -446,8 +446,9 @@ class RCAApp:
                             ui.markdown(str(value))
                         else:
                             ui.markdown("N/A")
-                # Special handling for KT table
+                # Special handling for KT table and markdown/HTML/markdown tables for all prompts
                 if self.selected_prompt == "kt-analysis_prompt":
+                    # Render KT table if present
                     kt_table = analysis.get("problem_assessment_table")
                     if kt_table:
                         with ui.card().classes('w-full mb-4'):
@@ -466,8 +467,11 @@ class RCAApp:
                                                  rows=rows,
                                                  row_key=headers[0] if headers else None).classes('w-full')
                             elif isinstance(kt_table, str):
+                                # Try markdown table, HTML table, or CSV
                                 if "|" in kt_table:
                                     ui.markdown(kt_table)
+                                elif "<table" in kt_table:
+                                    ui.html(kt_table)
                                 else:
                                     import csv
                                     from io import StringIO
@@ -481,6 +485,18 @@ class RCAApp:
                                                  row_key=headers[0] if headers else None).classes('w-full')
                                     else:
                                         ui.markdown(kt_table)
+                # Render any markdown or HTML tables in any section (for all prompt types)
+                for header, key in sections:
+                    value = analysis.get(key)
+                    if isinstance(value, str):
+                        if "<table" in value:
+                            with ui.card().classes('w-full mb-4'):
+                                ui.label(f"{header} (Table)").classes('text-lg font-semibold mb-2')
+                                ui.html(value)
+                        elif "|" in value and value.count("|") > 2:
+                            with ui.card().classes('w-full mb-4'):
+                                ui.label(f"{header} (Table)").classes('text-lg font-semibold mb-2')
+                                ui.markdown(value)
                 # Download Report for formal RCA only
                 if self.selected_prompt == "formal_rca_prompt":
                     with ui.card().classes('w-full mb-4'):
