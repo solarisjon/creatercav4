@@ -346,7 +346,7 @@ class RCAApp:
             # Show progress
             self.progress_bar.visible = True
             self.progress_bar.value = 0.1
-            ui.notify('Starting RCA analysis...', type='info')
+            ui.notify('Starting analysis...', type='info')
 
             # Generate analysis with selected prompt
             self.analysis_result = await rca_generator.generate_rca_analysis(
@@ -359,7 +359,7 @@ class RCAApp:
 
             self.progress_bar.value = 1.0
             self.display_results()
-            ui.notify('RCA analysis completed successfully!', type='positive')
+            ui.notify('Analysis completed successfully!', type='positive')
 
         except Exception as e:
             error_msg = str(e)
@@ -400,9 +400,9 @@ class RCAApp:
                     for src in sources:
                         ui.markdown(f"- {src}")
 
-            # Display sections based on the selected prompt
+            # Dynamic section display based on prompt
             if self.selected_prompt == "formal_rca_prompt":
-                # Show all major RCA sections
+                # Show all major RCA sections and offer download
                 sections = [
                     ("Executive Summary", "executive_summary"),
                     ("Problem Statement", "problem_statement"),
@@ -418,13 +418,73 @@ class RCAApp:
                     ("Severity", "severity"),
                     ("Priority", "priority"),
                 ]
+                for header, key in sections:
+                    value = analysis.get(key)
+                    with ui.card().classes('w-full mb-4'):
+                        ui.label(header).classes('text-lg font-semibold mb-2')
+                        if isinstance(value, list):
+                            for v in value:
+                                ui.markdown(f"• {v}")
+                        elif value is not None:
+                            ui.markdown(str(value))
+                        else:
+                            ui.markdown("N/A")
+                # Download Report
+                with ui.card().classes('w-full mb-4'):
+                    ui.label('Report Download').classes('text-lg font-semibold mb-2')
+                    doc_path = self.analysis_result['document_path']
+                    ui.markdown(f"Report saved to: `{doc_path}`")
+                    # If the report is a .docx file, offer a download link
+                    if doc_path.endswith('.docx'):
+                        from nicegui import app
+                        import os
+                        static_url = None
+                        static_dir = os.path.dirname(doc_path)
+                        static_file = os.path.basename(doc_path)
+                        if not hasattr(app, "_rca_static_registered"):
+                            app.add_static_files('/output', static_dir)
+                            app._rca_static_registered = True
+                        static_url = f"/output/{static_file}"
+                        ui.markdown(f"[⬇️ Download Word Report]({static_url})")
+                    elif doc_path.endswith('.json'):
+                        from nicegui import app
+                        import os
+                        static_url = None
+                        static_dir = os.path.dirname(doc_path)
+                        static_file = os.path.basename(doc_path)
+                        if not hasattr(app, "_rca_static_registered_json"):
+                            app.add_static_files('/output', static_dir)
+                            app._rca_static_registered_json = True
+                        static_url = f"/output/{static_file}"
+                        ui.markdown(f"[⬇️ Download JSON Report]({static_url})")
             elif self.selected_prompt == "initial_analysis_prompt":
-                sections = [
-                    ("Overview", "overview"),
-                    ("Key Findings", "key_findings"),
-                    ("Summary", "summary"),
-                    ("Recommendations", "recommendations"),
-                ]
+                # Only display the sections present in the prompt file
+                prompt_path = Path(f"src/prompts/{self.selected_prompt}")
+                prompt_sections = []
+                if prompt_path.exists():
+                    with open(prompt_path, "r", encoding="utf-8") as f:
+                        lines = f.readlines()
+                    # Find section headers (lines starting with -- or similar, or capitalized)
+                    for line in lines:
+                        line = line.strip()
+                        if line and (line.startswith("--") or (line.isupper() and len(line) > 5)):
+                            prompt_sections.append(line.strip("- ").replace("_", " ").title())
+                # Fallback to keys in analysis if no headers found
+                if not prompt_sections:
+                    prompt_sections = [k.replace("_", " ").title() for k in analysis.keys() if k != "raw_analysis"]
+                for section in prompt_sections:
+                    # Try to find a matching key
+                    key = section.lower().replace(" ", "_")
+                    value = analysis.get(key)
+                    with ui.card().classes('w-full mb-4'):
+                        ui.label(section).classes('text-lg font-semibold mb-2')
+                        if isinstance(value, list):
+                            for v in value:
+                                ui.markdown(f"• {v}")
+                        elif value is not None:
+                            ui.markdown(str(value))
+                        else:
+                            ui.markdown("N/A")
             elif self.selected_prompt == "kt-analysis_prompt":
                 # Show KT-style sections and render a table if present
                 sections = [
@@ -434,46 +494,43 @@ class RCAApp:
                     ("Root Cause", "root_cause"),
                     ("Solution", "solution"),
                 ]
-
+                for header, key in sections:
+                    value = analysis.get(key)
+                    with ui.card().classes('w-full mb-4'):
+                        ui.label(header).classes('text-lg font-semibold mb-2')
+                        if isinstance(value, list):
+                            for v in value:
+                                ui.markdown(f"• {v}")
+                        elif value is not None:
+                            ui.markdown(str(value))
+                        else:
+                            ui.markdown("N/A")
                 # If a table is present in the analysis, render it
                 kt_table = analysis.get("problem_assessment_table")
                 if kt_table and isinstance(kt_table, list):
                     with ui.card().classes('w-full mb-4'):
                         ui.label("Problem Assessment Table").classes('text-lg font-semibold mb-2')
-                        # Assume table is a list of dicts or list of lists
                         if isinstance(kt_table[0], dict):
                             headers = list(kt_table[0].keys())
                             ui.table(columns=[{"name": h, "label": h, "field": h} for h in headers],
                                      rows=kt_table,
                                      row_key=headers[0] if headers else None).classes('w-full')
                         elif isinstance(kt_table[0], list):
-                            # First row is headers
                             headers = kt_table[0]
                             rows = [dict(zip(headers, row)) for row in kt_table[1:]]
                             ui.table(columns=[{"name": h, "label": h, "field": h} for h in headers],
                                      rows=rows,
                                      row_key=headers[0] if headers else None).classes('w-full')
-
             else:
                 # Fallback: show all keys in analysis
-                sections = [(k.replace("_", " ").title(), k) for k in analysis.keys()]
-
-            shown_keys = set()
-            for header, key in sections:
-                # Don't show the table again if already rendered
-                if self.selected_prompt == "kt-analysis_prompt" and key == "problem_assessment_table":
-                    continue
-                value = analysis.get(key)
-                shown_keys.add(key)
-                with ui.card().classes('w-full mb-4'):
-                    ui.label(header).classes('text-lg font-semibold mb-2')
-                    if isinstance(value, list):
-                        for v in value:
-                            ui.markdown(f"• {v}")
-                    elif value is not None:
-                        ui.markdown(str(value))
-                    else:
-                        ui.markdown("N/A")
+                for k, v in analysis.items():
+                    with ui.card().classes('w-full mb-4'):
+                        ui.label(k.replace("_", " ").title()).classes('text-lg font-semibold mb-2')
+                        if isinstance(v, list):
+                            for item in v:
+                                ui.markdown(f"• {item}")
+                        else:
+                            ui.markdown(str(v))
 
             # Raw Response (if available)
             if analysis.get('raw_response'):
@@ -482,37 +539,6 @@ class RCAApp:
                     ui.markdown("⚠️ **Note**: This analysis used fallback parsing due to JSON format issues.")
                     with ui.expansion('View Raw Response', icon='code').classes('w-full'):
                         ui.code(analysis['raw_response']).classes('w-full')
-
-            # Download Report
-            with ui.card().classes('w-full mb-4'):
-                ui.label('Report Download').classes('text-lg font-semibold mb-2')
-                doc_path = self.analysis_result['document_path']
-                ui.markdown(f"Report saved to: `{doc_path}`")
-                # If the report is a .docx file, offer a download link
-                if doc_path.endswith('.docx'):
-                    # Serve the file via NiceGUI static files
-                    from nicegui import app
-                    import os
-                    static_url = None
-                    static_dir = os.path.dirname(doc_path)
-                    static_file = os.path.basename(doc_path)
-                    # Register the output directory as a static folder if not already
-                    if not hasattr(app, "_rca_static_registered"):
-                        app.add_static_files('/output', static_dir)
-                        app._rca_static_registered = True
-                    static_url = f"/output/{static_file}"
-                    ui.markdown(f"[⬇️ Download Word Report]({static_url})")
-                elif doc_path.endswith('.json'):
-                    from nicegui import app
-                    import os
-                    static_url = None
-                    static_dir = os.path.dirname(doc_path)
-                    static_file = os.path.basename(doc_path)
-                    if not hasattr(app, "_rca_static_registered_json"):
-                        app.add_static_files('/output', static_dir)
-                        app._rca_static_registered_json = True
-                    static_url = f"/output/{static_file}"
-                    ui.markdown(f"[⬇️ Download JSON Report]({static_url})")
     
     def clear_all(self):
         """Clear all inputs and results"""
