@@ -6,7 +6,6 @@ Main application using NiceGUI with clean architecture
 
 import asyncio
 from pathlib import Path
-from typing import List
 from nicegui import ui
 from src.utils.logger import setup_logger
 from src.utils.file_handler import FileHandler
@@ -40,6 +39,8 @@ class RCAApp:
             'output_directory': config.app_config['output_directory']
         }
         self.rca_engine = RCAEngine(rca_config)
+        # Inject the MCP client into the RCA engine
+        self.rca_engine.set_mcp_client(mcp_client)
         
         # UI state
         self.uploaded_files = []
@@ -47,6 +48,15 @@ class RCAApp:
         self.jira_tickets = []
         self.selected_prompt = "formal_rca_prompt"
         self.analysis_result = None
+        self.analysis_status = None  # Track analysis status for UI updates
+        self.analysis_error = None   # Track analysis errors for UI updates
+        
+        # Jira fetch state
+        self._jira_fetch_status = None
+        self._jira_main_ticket = None
+        self._jira_linked_issues = []
+        self._jira_fetch_error = None
+        self._jira_check_timer = None
         
         # UI components
         self.files_list = None
@@ -55,6 +65,7 @@ class RCAApp:
         self.results_container = None
         self.analysis_display = None
         self.progress_bar = None
+        self.status_timer = None  # Timer to check analysis status
         
     def setup_ui(self):
         """Setup the user interface"""
@@ -119,7 +130,7 @@ class RCAApp:
             ui.label('Jira Tickets').classes('text-lg font-semibold mb-2')
             with ui.row().classes('w-full'):
                 self.ticket_input = ui.input('Enter Jira Ticket ID').classes('flex-grow')
-                ui.button('Add Ticket', on_click=lambda: asyncio.create_task(self.add_jira_ticket())).classes('ml-2')
+                ui.button('Add Ticket', on_click=self.add_jira_ticket_sync).classes('ml-2')
             
             # Display added tickets
             ui.label('Added Tickets:').classes('text-sm font-medium mt-2')
@@ -142,7 +153,7 @@ class RCAApp:
         with ui.row().classes('w-full gap-2 mb-4'):
             ui.button(
                 'Generate Analysis', 
-                on_click=lambda: asyncio.create_task(self.generate_analysis())
+                on_click=self.start_analysis
             ).classes('bg-blue-600 text-white px-6 py-2')
             
             ui.button(
@@ -191,8 +202,8 @@ class RCAApp:
         else:
             ui.notify('Please enter a valid URL', type='negative')
     
-    async def add_jira_ticket(self):
-        """Add Jira ticket to list"""
+    def add_jira_ticket_sync(self):
+        """Add Jira ticket to list with linked issues dialog"""
         ticket = self.ticket_input.value.strip().upper()
         if not ticket:
             ui.notify('Please enter a valid Jira ticket ID', type='negative')
@@ -203,44 +214,110 @@ class RCAApp:
             self.ticket_input.value = ''
             return
 
-        # Try to fetch linked issues
+        # Show loading and start background fetch
+        ui.notify('Fetching linked issues...', type='info')
+        
+        # Set up state tracking for the async operation
+        self._jira_fetch_status = 'fetching'
+        self._jira_main_ticket = ticket
+        
+        # Start async task to fetch linked issues
+        import asyncio
+        asyncio.create_task(self._fetch_linked_issues_background(ticket))
+        
+        # Start a timer to check for completion
+        self._jira_check_timer = ui.timer(0.5, self._check_jira_fetch_status)
+
+    async def _fetch_linked_issues_background(self, main_ticket: str):
+        """Fetch linked issues in background without UI interactions"""
         try:
-            grouped = await mcp_client.get_linked_issues_grouped(ticket)
+            # Import the mcp_client
+            from src.mcp_client import mcp_client
+            
+            # Fetch linked issues
+            grouped = await mcp_client.get_linked_issues_grouped(main_ticket)
             linked_issues = []
             for link_type, issues in grouped.items():
                 for issue in issues:
                     issue['link_type'] = link_type
                     linked_issues.append(issue)
+            
+            # Store the results for UI to pick up
+            self._jira_linked_issues = linked_issues
+            self._jira_fetch_status = 'completed'
+            
         except Exception as e:
-            logger.error(f"Failed to fetch linked issues for {ticket}: {e}")
-            linked_issues = []
+            logger.error(f"Failed to fetch linked issues for {main_ticket}: {e}")
+            self._jira_fetch_error = str(e)
+            self._jira_fetch_status = 'error'
 
-        # Show dialog for ticket confirmation
-        await self.show_linked_issues_dialog(linked_issues, main_ticket=ticket)
+    def _check_jira_fetch_status(self):
+        """Check the status of Jira linked issues fetching"""
+        if not hasattr(self, '_jira_fetch_status'):
+            return
+            
+        if self._jira_fetch_status == 'completed':
+            # Fetch completed successfully - show dialog
+            self._jira_check_timer.cancel()
+            self._show_linked_issues_dialog()
+            
+        elif self._jira_fetch_status == 'error':
+            # Fetch failed - show error and add main ticket only
+            self._jira_check_timer.cancel()
+            error_msg = getattr(self, '_jira_fetch_error', 'Unknown error')
+            ui.notify(f'Error fetching linked issues: {error_msg}. Adding main ticket only.', type='warning')
+            self._add_single_ticket(self._jira_main_ticket)
+            
+            # Clean up
+            self._cleanup_jira_fetch_state()
 
-    async def show_linked_issues_dialog(self, linked_issues, main_ticket=None):
-        """Show dialog for ticket selection"""
+    def _cleanup_jira_fetch_state(self):
+        """Clean up Jira fetch state variables"""
+        for attr in ['_jira_fetch_status', '_jira_main_ticket', '_jira_linked_issues', '_jira_fetch_error']:
+            if hasattr(self, attr):
+                delattr(self, attr)
+
+    def _add_single_ticket(self, ticket: str):
+        """Add a single ticket without linked issues"""
+        if ticket not in self.jira_tickets:
+            self.jira_tickets.append(ticket)
+            self.update_tickets_display()
+            ui.notify(f'Ticket added: {ticket}', type='positive')
+        self.ticket_input.value = ''
+
+    def _show_linked_issues_dialog(self):
+        """Show the linked issues selection dialog"""
+        if not hasattr(self, '_jira_main_ticket'):
+            return
+            
+        main_ticket = self._jira_main_ticket
+        linked_issues = getattr(self, '_jira_linked_issues', [])
+        
+        # Create the dialog in proper UI context
         with ui.dialog() as dialog, ui.card():
             ui.label('Add Jira Issues').classes('text-lg font-semibold mb-2')
             
             # Main ticket (always selected)
-            if main_ticket:
-                ui.checkbox(f"{main_ticket} (Main ticket)", value=True).props('disable')
+            ui.checkbox(f"{main_ticket} (Main ticket)", value=True).props('disable')
             
             # Linked issues
             checkboxes = []
-            for issue in linked_issues:
-                key = issue.get('key', '')
-                summary = issue.get('summary', '')
-                link_type = issue.get('link_type', '')
-                label = f"{key} ({link_type}) - {summary}"
-                cb = ui.checkbox(label, value=False)
-                checkboxes.append((cb, key))
+            if linked_issues:
+                ui.label('Related Issues:').classes('text-sm font-medium mt-2 mb-1')
+                for issue in linked_issues:
+                    key = issue.get('key', '')
+                    summary = issue.get('summary', '')
+                    link_type = issue.get('link_type', '')
+                    label = f"{key} ({link_type}) - {summary}"
+                    cb = ui.checkbox(label, value=False)
+                    checkboxes.append((cb, key))
+            else:
+                ui.label('No linked issues found.').classes('text-sm text-gray-600 mt-2')
             
-            with ui.row():
-                async def on_confirm():
+            with ui.row().classes('mt-4'):
+                def on_confirm():
                     # Add main ticket
-                    if main_ticket and main_ticket not in self.jira_tickets:
+                    if main_ticket not in self.jira_tickets:
                         self.jira_tickets.append(main_ticket)
                     
                     # Add selected linked issues
@@ -249,15 +326,25 @@ class RCAApp:
                             self.jira_tickets.append(key)
                     
                     self.update_tickets_display()
-                    ui.notify("Added Jira ticket(s)", type='positive')
+                    ui.notify(f"Added Jira ticket(s): {main_ticket}" + 
+                             (f" + {sum(1 for cb, _ in checkboxes if cb.value)} linked issues" if any(cb.value for cb, _ in checkboxes) else ""), 
+                             type='positive')
                     self.ticket_input.value = ''
                     dialog.close()
+                    
+                    # Clean up state
+                    self._cleanup_jira_fetch_state()
+                
+                def on_cancel():
+                    dialog.close()
+                    # Clean up state
+                    self._cleanup_jira_fetch_state()
                 
                 ui.button('Add Selected', on_click=on_confirm)
-                ui.button('Cancel', on_click=dialog.close)
+                ui.button('Cancel', on_click=on_cancel)
         
         dialog.open()
-    
+
     def update_files_display(self):
         """Update the files display"""
         self.files_list.clear()
@@ -315,21 +402,53 @@ class RCAApp:
         self.selected_prompt = e.value
         logger.info(f"Prompt selection changed to: {self.selected_prompt}")
     
-    async def generate_analysis(self):
-        """Generate RCA analysis using the new architecture"""
+    def start_analysis(self):
+        """Start analysis (synchronous wrapper)"""
+        # Validate inputs first in sync context
+        if not self.uploaded_files and not self.urls and not self.jira_tickets:
+            ui.notify('Please add at least one file, URL, or Jira ticket', type='negative')
+            return
+
+        # Reset status
+        self.analysis_status = None
+        self.analysis_error = None
+        self.analysis_result = None
+
+        # Show progress immediately
+        self.progress_bar.visible = True
+        self.progress_bar.value = 0.1
+        ui.notify('Starting RCA analysis...', type='info')
+        
+        # Start the async analysis in background
+        asyncio.create_task(self._generate_analysis_async())
+        
+        # Start status checking timer
+        self.status_timer = ui.timer(0.5, self._check_analysis_status)
+
+    def _check_analysis_status(self):
+        """Check analysis status and update UI accordingly"""
+        if self.analysis_status == 'completed':
+            # Analysis completed successfully
+            self.progress_bar.value = 1.0
+            self.display_results()
+            ui.notify('RCA analysis completed successfully!', type='positive')
+            self.status_timer.cancel()
+            self.progress_bar.visible = False
+            self.analysis_status = None
+            
+        elif self.analysis_status == 'error':
+            # Analysis failed
+            ui.notify(f'Error generating analysis: {self.analysis_error}', type='negative')
+            self.status_timer.cancel()
+            self.progress_bar.visible = False
+            self.analysis_status = None
+            self.analysis_error = None
+
+    async def _generate_analysis_async(self):
+        """Generate RCA analysis (background async method)"""
         try:
-            # Validate inputs
-            if not self.uploaded_files and not self.urls and not self.jira_tickets:
-                ui.notify('Please add at least one file, URL, or Jira ticket', type='negative')
-                return
-
-            # Show progress
-            self.progress_bar.visible = True
-            self.progress_bar.value = 0.1
-            ui.notify('Starting RCA analysis...', type='info')
-
             # Use the new RCA engine
-            self.analysis_result = await self.rca_engine.generate_analysis(
+            result = await self.rca_engine.generate_analysis(
                 files=self.uploaded_files,
                 urls=self.urls,
                 jira_tickets=self.jira_tickets,
@@ -338,18 +457,19 @@ class RCAApp:
             )
             
             # Store the prompt file used for this analysis
-            self.analysis_result['prompt_file_used'] = self.selected_prompt
-
-            self.progress_bar.value = 1.0
-            self.display_results()
-            ui.notify('RCA analysis completed successfully!', type='positive')
+            result['prompt_file_used'] = self.selected_prompt
+            
+            # Update results and status
+            self.analysis_result = result
+            self.analysis_status = 'completed'
 
         except Exception as e:
-            error_msg = str(e)
-            ui.notify(f'Error generating analysis: {error_msg}', type='negative')
+            # Store error for UI update
+            self.analysis_error = str(e)
+            self.analysis_status = 'error'
             logger.error(f"Error generating analysis: {e}")
-        finally:
-            self.progress_bar.visible = False
+
+    # ...existing code...
     
     def display_results(self):
         """Display analysis results using the new display component"""
@@ -372,8 +492,23 @@ class RCAApp:
         self.urls.clear()
         self.jira_tickets.clear()
         self.analysis_result = None
+        self.analysis_status = None
+        self.analysis_error = None
         self.selected_prompt = "formal_rca_prompt"
         self.prompt_select.value = self.selected_prompt
+
+        # Cancel any running status timer
+        if self.status_timer:
+            self.status_timer.cancel()
+            self.status_timer = None
+
+        # Cancel any running Jira fetch timer
+        if hasattr(self, '_jira_check_timer') and self._jira_check_timer:
+            self._jira_check_timer.cancel()
+            self._jira_check_timer = None
+        
+        # Clean up Jira fetch state
+        self._cleanup_jira_fetch_state()
 
         self.update_files_display()
         self.update_urls_display()

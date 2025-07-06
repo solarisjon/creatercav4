@@ -127,7 +127,7 @@ class RCAEngine:
             logger.info(f"Processing {len(urls)} URLs")
             for url in urls:
                 try:
-                    content = await self.mcp_client.fetch_url_content(url)
+                    content = await self.mcp_client.scrape_web_content(url)
                     data_parts.append(f"## URL: {url}\n{content}\n")
                 except Exception as e:
                     logger.warning(f"Failed to fetch URL {url}: {e}")

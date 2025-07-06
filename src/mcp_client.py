@@ -331,6 +331,62 @@ class MCPClient:
         
         self.sessions.clear()
         logger.info("All MCP sessions closed")
+    
+    async def get_jira_ticket(self, issue_key: str) -> str:
+        """Get a single Jira ticket by key"""
+        try:
+            from jira import JIRA
+            
+            jira_config = config.jira_config
+            
+            # Use Bearer token authentication
+            headers = {
+                'Authorization': f'Bearer {jira_config["api_token"]}'
+            }
+            jira = JIRA(
+                server=jira_config['url'],
+                options={'headers': headers, 'verify': False}
+            )
+            logger.info(f"Fetching Jira ticket: {issue_key}")
+            
+            # Get the issue
+            issue = jira.issue(issue_key)
+            
+            # Format the ticket data
+            ticket_info = {
+                'key': issue.key,
+                'summary': issue.fields.summary,
+                'status': issue.fields.status.name,
+                'assignee': issue.fields.assignee.displayName if issue.fields.assignee else 'Unassigned',
+                'created': str(issue.fields.created),
+                'updated': str(issue.fields.updated),
+                'description': issue.fields.description or 'No description',
+                'priority': issue.fields.priority.name if issue.fields.priority else 'None',
+                'issue_type': issue.fields.issuetype.name,
+                'reporter': issue.fields.reporter.displayName if issue.fields.reporter else 'Unknown'
+            }
+            
+            # Format as readable text
+            formatted_ticket = f"""
+Key: {ticket_info['key']}
+Summary: {ticket_info['summary']}
+Type: {ticket_info['issue_type']}
+Status: {ticket_info['status']}
+Priority: {ticket_info['priority']}
+Assignee: {ticket_info['assignee']}
+Reporter: {ticket_info['reporter']}
+Created: {ticket_info['created']}
+Updated: {ticket_info['updated']}
+
+Description:
+{ticket_info['description']}
+"""
+            
+            return formatted_ticket.strip()
+            
+        except Exception as e:
+            logger.error(f"Failed to fetch Jira ticket {issue_key}: {e}")
+            raise
 
 # Global MCP client instance
 mcp_client = MCPClient()

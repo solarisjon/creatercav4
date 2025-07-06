@@ -95,7 +95,7 @@ class PromptManager:
         # Add NetApp context for technical prompts
         netapp_context = ""
         if prompt_type in ["formal_rca_prompt", "kt-analysis_prompt"]:
-            netapp_context = self.get_context("context_netapp")
+            netapp_context = self.get_context("netapp_context")
         
         # Build the complete prompt
         prompt_parts = []
@@ -213,7 +213,7 @@ Please structure your response as a JSON object with these fields.
         # Migrate context files
         context_files = [
             "context",
-            "context_netapp",
+            "netapp_context",
             "cpe_prompt",
             "contap_prompt",
             "netapp_prompt",
