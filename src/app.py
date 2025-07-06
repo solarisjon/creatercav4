@@ -426,6 +426,7 @@ class RCAApp:
                     ("Recommendations", "recommendations"),
                 ]
             elif self.selected_prompt == "kt-analysis_prompt":
+                # Show KT-style sections and render a table if present
                 sections = [
                     ("Problem Description", "problem_description"),
                     ("Possible Causes", "possible_causes"),
@@ -433,12 +434,35 @@ class RCAApp:
                     ("Root Cause", "root_cause"),
                     ("Solution", "solution"),
                 ]
+
+                # If a table is present in the analysis, render it
+                kt_table = analysis.get("problem_assessment_table")
+                if kt_table and isinstance(kt_table, list):
+                    with ui.card().classes('w-full mb-4'):
+                        ui.label("Problem Assessment Table").classes('text-lg font-semibold mb-2')
+                        # Assume table is a list of dicts or list of lists
+                        if isinstance(kt_table[0], dict):
+                            headers = list(kt_table[0].keys())
+                            ui.table(columns=[{"name": h, "label": h, "field": h} for h in headers],
+                                     rows=kt_table,
+                                     row_key=headers[0] if headers else None).classes('w-full')
+                        elif isinstance(kt_table[0], list):
+                            # First row is headers
+                            headers = kt_table[0]
+                            rows = [dict(zip(headers, row)) for row in kt_table[1:]]
+                            ui.table(columns=[{"name": h, "label": h, "field": h} for h in headers],
+                                     rows=rows,
+                                     row_key=headers[0] if headers else None).classes('w-full')
+
             else:
                 # Fallback: show all keys in analysis
                 sections = [(k.replace("_", " ").title(), k) for k in analysis.keys()]
 
             shown_keys = set()
             for header, key in sections:
+                # Don't show the table again if already rendered
+                if self.selected_prompt == "kt-analysis_prompt" and key == "problem_assessment_table":
+                    continue
                 value = analysis.get(key)
                 shown_keys.add(key)
                 with ui.card().classes('w-full mb-4'):
