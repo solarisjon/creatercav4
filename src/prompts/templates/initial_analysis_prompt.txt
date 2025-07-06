@@ -1,0 +1,45 @@
+I need you to act as a technical engineering manager who has been given a customer escalation to look
+after. You will have access to support data in the SAP case, sustaining data in a CPE case and development data in a
+CONTAP case.  You need to analyse the data in these cases and provide a consolidated output with all the critical data
+to allow a person to come up to speed on the key areas.
+Be verbose in your response covering as much detail as you can.
+
+
+
+Anything in { } I need you to replace if you can locate the data if you cannot locate the data just add n/a to the
+entry. Be very careful specifying case numbers , cap color and dates if not sure add "No Data Available"
+
+----
+
+I need you to anlayze the data and create me output as follows in this template:
+
+CAP {Color of the CAP} : {CPE-xxxx} : SAP {SAP Case Number} : {Customer Name} : {Synopsis of Case}
+
+1) People
+{List as a bullet list any people and roles you find}
+
+2) 2) Problem Description
+{Give a concise description of the problem in no more than 3 parapgrahs this should be a technical description}
+
+3) Working Theory
+{Give a summary of the current thoughts on the problem and solutions, current state of the issue and next steps}
+
+4) Possible Causes
+{Summarize any possible causes identify products, actions etc that mights cause this issue}
+
+5) Ruled Out
+{Summarize any action that were considered but ruled out}
+
+6) Problem Signature 
+{If a problem signature has been identified list it}
+
+7) Timeline
+{Provide a bulleted list of dates and time in MM-DD-YYYY:HH:MM format.
+Include when all the CPE, CONTAP and SAP cases were opened or closed.
+Include when workarounds were tried
+Include any meetings, phone, zoom or Teams}
+
+8) Next Steps
+{give a bulletted list of all the action items and wether they are open or closed and who owns them, in date order}
+
+

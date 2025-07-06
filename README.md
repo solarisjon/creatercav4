@@ -1,27 +1,48 @@
 # MCP-based Root Cause Analysis Tool
 
-A modern web-based Root Cause Analysis (RCA) tool that leverages Model Context Protocol (MCP) servers instead of traditional RAG (Retrieval-Augmented Generation) for enhanced data access and analysis.
+A modern web-based Root Cause Analysis (RCA) tool that leverages Model Context Protocol (MCP) servers for enhanced data access and analysis. Features a clean, modular architecture for maintainability and extensibility.
 
-## Features
+## 🎯 Key Features
 
 - **Multi-Source Data Integration**: Process PDF files, web URLs, and Jira tickets
 - **MCP Server Architecture**: Uses Model Context Protocol for efficient data access
 - **Modern Web UI**: Built with NiceGUI for responsive, interactive experience
-- **Jira Integration**: Read and reference existing Jira tickets for context
+- **Jira Integration**: Read and reference existing Jira tickets with linked issue support
 - **Comprehensive Analysis**: Generate detailed RCA reports with LLM assistance
 - **Multi-LLM Support**: Works with OpenAI GPT, Anthropic Claude, OpenRouter, and corporate LLM proxy models
-- **Comprehensive Testing**: Full unit test coverage for reliable operation
+- **Kepner-Tregoe Analysis**: Specialized KT analysis with proper table rendering
+- **Clean Architecture**: Modular, maintainable codebase with separated concerns
 
-## Architecture
+## 🏗️ Architecture
 
+### High-Level Overview
 ```
 +------------------+    +------------------+    +------------------+
-|   NiceGUI App    |--->|   MCP Client     |--->|  MCP Servers     |
+|   NiceGUI UI     |--->|   Core Engine    |--->|  MCP Servers     |
 |                  |    |                  |    |                  |
-| - File Upload    |    | - Protocol       |    | - Jira MCP       |
-| - URL Input      |    |   Handler        |    | - Filesystem     |
-| - RCA Display    |    | - Context Mgmt   |    | - Web Scraper    |
+| - File Upload    |    | - RCA Analysis   |    | - Jira MCP       |
+| - URL Input      |    | - LLM Client     |    | - Filesystem     |
+| - Results View   |    | - Response Parse |    | - Web Scraper    |
 +------------------+    +------------------+    +------------------+
+```
+
+### Modular Structure
+```
+src/
+├── ui/                          # User Interface Layer
+│   ├── main_app.py             # Main NiceGUI application
+│   └── components/
+│       └── analysis_display.py # Analysis results display
+├── core/                        # Business Logic Layer
+│   ├── analysis/
+│   │   ├── rca_engine.py       # Analysis orchestrator
+│   │   ├── parsers.py          # LLM response parsing
+│   │   └── prompt_manager.py   # Prompt management
+│   └── llm/
+│       └── client.py           # Unified LLM client
+├── utils/                       # Shared Utilities
+├── config.py                    # Configuration management
+└── mcp_client.py               # MCP integration
 ```
 
 ## Installation

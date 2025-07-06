@@ -30,7 +30,7 @@ def main():
         logger.info("Starting MCP-based RCA Tool")
         
         # Import the app module to register routes
-        from src.app import create_app, rca_app
+        from src.ui.main_app import create_app
         
         # Create and configure the app
         app = create_app()

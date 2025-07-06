@@ -305,3 +305,270 @@
 2025-07-05 18:24:16,929 - __main__ - INFO - Starting server on 0.0.0.0:8090
 2025-07-05 18:24:16,988 - src.app - INFO - MCP client initialized successfully
 2025-07-05 18:24:17,381 - src.app - INFO - MCP client initialized successfully
+2025-07-05 18:43:23,317 - __main__ - INFO - Starting MCP-based RCA Tool
+2025-07-05 18:43:23,515 - __main__ - INFO - Starting server on 0.0.0.0:8090
+2025-07-05 18:43:23,565 - src.app - INFO - MCP client initialized successfully
+2025-07-05 18:43:23,929 - src.app - INFO - MCP client initialized successfully
+2025-07-06 12:19:51,931 - src.app - INFO - MCP client initialized successfully
+2025-07-06 12:43:46,382 - __main__ - INFO - Starting MCP-based RCA Tool
+2025-07-06 12:43:46,934 - __main__ - INFO - Starting server on 0.0.0.0:8090
+2025-07-06 12:43:47,410 - src.app - INFO - MCP client initialized successfully
+2025-07-06 12:43:47,855 - src.app - INFO - MCP client initialized successfully
+2025-07-06 12:46:45,351 - __main__ - INFO - Starting MCP-based RCA Tool
+2025-07-06 12:46:45,554 - __main__ - INFO - Starting server on 0.0.0.0:8090
+2025-07-06 12:46:45,607 - src.app - INFO - MCP client initialized successfully
+2025-07-06 12:46:45,789 - src.app - INFO - MCP client initialized successfully
+2025-07-06 12:47:16,332 - __main__ - INFO - Starting MCP-based RCA Tool
+2025-07-06 12:47:16,577 - __main__ - INFO - Starting server on 0.0.0.0:8090
+2025-07-06 12:47:16,637 - src.app - INFO - MCP client initialized successfully
+2025-07-06 12:47:16,927 - src.app - INFO - MCP client initialized successfully
+2025-07-06 12:48:11,687 - src.app - INFO - MCP client initialized successfully
+2025-07-06 12:48:47,532 - __main__ - INFO - Starting MCP-based RCA Tool
+2025-07-06 12:48:47,811 - __main__ - INFO - Starting server on 0.0.0.0:8090
+2025-07-06 12:48:47,869 - src.app - INFO - MCP client initialized successfully
+2025-07-06 12:48:48,124 - src.app - INFO - MCP client initialized successfully
+2025-07-06 12:50:18,553 - __main__ - INFO - Starting MCP-based RCA Tool
+2025-07-06 12:50:18,752 - __main__ - INFO - Starting server on 0.0.0.0:8090
+2025-07-06 12:50:18,804 - src.app - INFO - MCP client initialized successfully
+2025-07-06 12:50:19,227 - src.app - INFO - MCP client initialized successfully
+2025-07-06 12:51:31,027 - __main__ - INFO - Starting MCP-based RCA Tool
+2025-07-06 12:51:31,312 - __main__ - INFO - Starting server on 0.0.0.0:8090
+2025-07-06 12:51:31,381 - src.app - INFO - MCP client initialized successfully
+2025-07-06 12:51:31,651 - src.app - INFO - MCP client initialized successfully
+2025-07-06 12:51:51,423 - __main__ - INFO - Starting MCP-based RCA Tool
+2025-07-06 12:51:51,657 - __main__ - INFO - Starting server on 0.0.0.0:8090
+2025-07-06 12:51:51,657 - __main__ - ERROR - Port 8090 is already in use. Please use a different port or free the port first.
+2025-07-06 12:51:51,657 - __main__ - ERROR - To kill the process using the port, run:
+2025-07-06 12:51:51,657 - __main__ - ERROR - lsof -ti:8090 | xargs kill -9
+2025-07-06 12:51:59,323 - __main__ - INFO - Starting MCP-based RCA Tool
+2025-07-06 12:51:59,561 - __main__ - INFO - Starting server on 0.0.0.0:8090
+2025-07-06 12:51:59,561 - __main__ - ERROR - Port 8090 is already in use. Please use a different port or free the port first.
+2025-07-06 12:51:59,561 - __main__ - ERROR - To kill the process using the port, run:
+2025-07-06 12:51:59,561 - __main__ - ERROR - lsof -ti:8090 | xargs kill -9
+2025-07-06 12:52:46,627 - __main__ - INFO - Starting MCP-based RCA Tool
+2025-07-06 12:52:46,876 - __main__ - INFO - Starting server on 0.0.0.0:8090
+2025-07-06 12:52:46,938 - src.app - INFO - MCP client initialized successfully
+2025-07-06 12:52:47,213 - src.app - INFO - MCP client initialized successfully
+2025-07-06 12:53:02,416 - __main__ - INFO - Starting MCP-based RCA Tool
+2025-07-06 12:53:02,644 - __main__ - INFO - Starting server on 0.0.0.0:8090
+2025-07-06 12:53:02,645 - __main__ - ERROR - Port 8090 is already in use. Please use a different port or free the port first.
+2025-07-06 12:53:02,645 - __main__ - ERROR - To kill the process using the port, run:
+2025-07-06 12:53:02,645 - __main__ - ERROR - lsof -ti:8090 | xargs kill -9
+2025-07-06 12:54:53,699 - __main__ - INFO - Starting MCP-based RCA Tool
+2025-07-06 12:54:53,910 - __main__ - INFO - Starting server on 0.0.0.0:8090
+2025-07-06 12:54:53,967 - src.app - INFO - MCP client initialized successfully
+2025-07-06 12:54:54,251 - src.app - INFO - MCP client initialized successfully
+2025-07-06 12:55:20,764 - __main__ - INFO - Starting MCP-based RCA Tool
+2025-07-06 12:55:21,004 - __main__ - INFO - Starting server on 0.0.0.0:8090
+2025-07-06 12:55:21,063 - src.app - INFO - MCP client initialized successfully
+2025-07-06 12:55:21,231 - src.app - INFO - MCP client initialized successfully
+2025-07-06 12:55:38,169 - __main__ - INFO - Starting MCP-based RCA Tool
+2025-07-06 12:55:38,403 - __main__ - INFO - Starting server on 0.0.0.0:8090
+2025-07-06 12:55:38,462 - src.app - INFO - MCP client initialized successfully
+2025-07-06 12:55:38,697 - src.app - INFO - MCP client initialized successfully
+2025-07-06 12:55:57,044 - __main__ - INFO - Starting MCP-based RCA Tool
+2025-07-06 12:55:57,244 - __main__ - INFO - Starting server on 0.0.0.0:8090
+2025-07-06 12:55:57,286 - src.app - INFO - MCP client initialized successfully
+2025-07-06 12:55:57,540 - src.app - INFO - MCP client initialized successfully
+2025-07-06 13:01:36,060 - __main__ - INFO - Starting MCP-based RCA Tool
+2025-07-06 13:01:36,285 - __main__ - INFO - Starting server on 0.0.0.0:8090
+2025-07-06 13:01:36,344 - src.app - INFO - MCP client initialized successfully
+2025-07-06 13:01:36,653 - src.app - INFO - MCP client initialized successfully
+2025-07-06 13:06:30,878 - __main__ - INFO - Starting MCP-based RCA Tool
+2025-07-06 13:06:31,093 - __main__ - INFO - Starting server on 0.0.0.0:8090
+2025-07-06 13:06:31,151 - src.app - INFO - MCP client initialized successfully
+2025-07-06 13:06:31,524 - src.app - INFO - MCP client initialized successfully
+2025-07-06 13:08:05,378 - __main__ - INFO - Starting MCP-based RCA Tool
+2025-07-06 13:08:05,646 - __main__ - INFO - Starting server on 0.0.0.0:8090
+2025-07-06 13:08:05,704 - src.app - INFO - MCP client initialized successfully
+2025-07-06 13:08:05,969 - src.app - INFO - MCP client initialized successfully
+2025-07-06 13:13:46,774 - __main__ - INFO - Starting MCP-based RCA Tool
+2025-07-06 13:13:46,984 - __main__ - INFO - Starting server on 0.0.0.0:8090
+2025-07-06 13:13:47,036 - src.app - INFO - MCP client initialized successfully
+2025-07-06 13:13:47,197 - src.app - INFO - MCP client initialized successfully
+2025-07-06 13:14:03,544 - __main__ - INFO - Starting MCP-based RCA Tool
+2025-07-06 13:14:03,795 - __main__ - INFO - Starting server on 0.0.0.0:8090
+2025-07-06 13:14:03,847 - src.app - INFO - MCP client initialized successfully
+2025-07-06 13:14:04,139 - src.app - INFO - MCP client initialized successfully
+2025-07-06 13:16:30,442 - __main__ - INFO - Starting MCP-based RCA Tool
+2025-07-06 13:16:30,639 - __main__ - INFO - Starting server on 0.0.0.0:8090
+2025-07-06 13:16:30,685 - src.app - INFO - MCP client initialized successfully
+2025-07-06 13:16:30,970 - src.app - INFO - MCP client initialized successfully
+2025-07-06 13:19:53,963 - __main__ - INFO - Starting MCP-based RCA Tool
+2025-07-06 13:19:54,166 - __main__ - INFO - Starting server on 0.0.0.0:8090
+2025-07-06 13:19:54,207 - src.app - INFO - MCP client initialized successfully
+2025-07-06 13:19:54,453 - src.app - INFO - MCP client initialized successfully
+2025-07-06 13:21:29,839 - __main__ - INFO - Starting MCP-based RCA Tool
+2025-07-06 13:21:30,031 - __main__ - INFO - Starting server on 0.0.0.0:8090
+2025-07-06 13:21:30,078 - src.app - INFO - MCP client initialized successfully
+2025-07-06 13:21:30,361 - src.app - INFO - MCP client initialized successfully
+2025-07-06 13:22:12,753 - src.app - INFO - MCP client initialized successfully
+2025-07-06 13:24:21,254 - __main__ - INFO - Starting MCP-based RCA Tool
+2025-07-06 13:24:21,534 - __main__ - INFO - Starting server on 0.0.0.0:8090
+2025-07-06 13:24:21,605 - src.app - INFO - MCP client initialized successfully
+2025-07-06 13:24:21,821 - src.app - INFO - MCP client initialized successfully
+2025-07-06 13:27:11,619 - __main__ - INFO - Starting MCP-based RCA Tool
+2025-07-06 13:27:11,851 - __main__ - INFO - Starting server on 0.0.0.0:8090
+2025-07-06 13:27:11,902 - src.app - INFO - MCP client initialized successfully
+2025-07-06 13:27:12,221 - src.app - INFO - MCP client initialized successfully
+2025-07-06 13:28:34,999 - __main__ - INFO - Starting MCP-based RCA Tool
+2025-07-06 13:28:35,276 - __main__ - INFO - Starting server on 0.0.0.0:8090
+2025-07-06 13:28:35,346 - src.app - INFO - MCP client initialized successfully
+2025-07-06 13:28:35,636 - src.app - INFO - MCP client initialized successfully
+2025-07-06 13:35:14,941 - __main__ - INFO - Starting MCP-based RCA Tool
+2025-07-06 13:35:15,159 - __main__ - INFO - Starting server on 0.0.0.0:8090
+2025-07-06 13:35:15,211 - src.app - INFO - MCP client initialized successfully
+2025-07-06 13:35:15,539 - src.app - INFO - MCP client initialized successfully
+2025-07-06 14:42:27,328 - __main__ - INFO - Starting MCP-based RCA Tool
+2025-07-06 14:42:27,543 - __main__ - INFO - Starting server on 0.0.0.0:8090
+2025-07-06 14:42:27,621 - src.app - INFO - MCP client initialized successfully
+2025-07-06 14:42:28,611 - src.app - INFO - MCP client initialized successfully
+2025-07-06 14:43:07,353 - src.app - INFO - Displaying results for prompt: kt-analysis_prompt
+2025-07-06 14:43:07,353 - src.app - INFO - Current selected_prompt: kt-analysis_prompt
+2025-07-06 14:43:07,353 - src.app - INFO - Analysis keys: ['problem_description', 'possible_causes', 'data_collection', 'root_cause', 'solution', 'raw_analysis', 'cpe', 'sources_used']
+2025-07-06 14:49:00,698 - __main__ - INFO - Starting MCP-based RCA Tool
+2025-07-06 14:49:00,941 - __main__ - INFO - Starting server on 0.0.0.0:8090
+2025-07-06 14:49:01,088 - src.app - INFO - MCP client initialized successfully
+2025-07-06 14:49:01,397 - src.app - INFO - MCP client initialized successfully
+2025-07-06 14:49:37,068 - src.app - INFO - Displaying results for prompt: kt-analysis_prompt
+2025-07-06 14:49:37,068 - src.app - INFO - Current selected_prompt: kt-analysis_prompt
+2025-07-06 14:49:37,068 - src.app - INFO - Analysis keys: ['problem_description', 'possible_causes', 'data_collection', 'root_cause', 'solution', 'raw_analysis', 'cpe', 'sources_used']
+2025-07-06 14:49:37,070 - src.app - INFO - Found unmapped analysis keys: ['cpe']
+2025-07-06 14:54:12,388 - __main__ - INFO - Starting MCP-based RCA Tool
+2025-07-06 14:54:12,591 - __main__ - INFO - Starting server on 0.0.0.0:8090
+2025-07-06 14:54:12,648 - src.app - INFO - MCP client initialized successfully
+2025-07-06 14:54:13,057 - src.app - INFO - MCP client initialized successfully
+2025-07-06 14:54:48,218 - src.app - INFO - Displaying results for prompt: kt-analysis_prompt
+2025-07-06 14:54:48,218 - src.app - INFO - Current selected_prompt: kt-analysis_prompt
+2025-07-06 14:54:48,218 - src.app - INFO - Analysis keys: ['problem_description', 'possible_causes', 'data_collection', 'root_cause', 'solution', 'raw_analysis', 'cpe', 'sources_used']
+2025-07-06 14:54:48,218 - src.app - INFO - === KT ANALYSIS DEBUG ===
+2025-07-06 14:54:48,218 - src.app - INFO - KT Key: 'problem_description' -> Value: ...
+2025-07-06 14:54:48,218 - src.app - INFO - KT Key: 'possible_causes' -> Value: ...
+2025-07-06 14:54:48,218 - src.app - INFO - KT Key: 'data_collection' -> Value: ...
+2025-07-06 14:54:48,218 - src.app - INFO - KT Key: 'root_cause' -> Value: Segmentation fault in the slice service on Node ID 6, causing RPC call failures and preventing API u...
+2025-07-06 14:54:48,218 - src.app - INFO - KT Key: 'solution' -> Value: ...
+2025-07-06 14:54:48,218 - src.app - INFO - KT Key: 'cpe' -> Value: CPE-9501...
+2025-07-06 14:54:48,218 - src.app - INFO - === END KT DEBUG ===
+2025-07-06 14:54:48,218 - src.app - WARNING - Using intelligent section detection for prompt: kt-analysis_prompt
+2025-07-06 14:54:48,219 - src.app - INFO - Detected 6 KT sections: ['Problem Description', 'Potential Causes', 'Data Collection', 'Root Cause', 'Solution', 'Cpe']
+2025-07-06 14:56:36,948 - __main__ - INFO - Starting MCP-based RCA Tool
+2025-07-06 14:56:37,187 - __main__ - INFO - Starting server on 0.0.0.0:8090
+2025-07-06 14:56:37,236 - src.app - INFO - MCP client initialized successfully
+2025-07-06 14:56:37,543 - src.app - INFO - MCP client initialized successfully
+2025-07-06 14:57:14,149 - src.app - INFO - Displaying results for prompt: kt-analysis_prompt
+2025-07-06 14:57:14,149 - src.app - INFO - Current selected_prompt: kt-analysis_prompt
+2025-07-06 14:57:14,149 - src.app - INFO - Analysis keys: ['problem_description', 'possible_causes', 'data_collection', 'root_cause', 'solution', 'raw_analysis', 'cpe', 'sources_used']
+2025-07-06 14:57:14,149 - src.app - INFO - === KT ANALYSIS DEBUG ===
+2025-07-06 14:57:14,149 - src.app - INFO - KT Key: 'problem_description' -> Value: ...
+2025-07-06 14:57:14,149 - src.app - INFO - KT Key: 'possible_causes' -> Value: ...
+2025-07-06 14:57:14,149 - src.app - INFO - KT Key: 'data_collection' -> Value: ...
+2025-07-06 14:57:14,149 - src.app - INFO - KT Key: 'root_cause' -> Value: Segmentation fault in the slice service on Node ID 6, leading to Zookeeper corruption and failure to...
+2025-07-06 14:57:14,150 - src.app - INFO - KT Key: 'solution' -> Value: ...
+2025-07-06 14:57:14,150 - src.app - INFO - KT Key: 'cpe' -> Value: CPE-9501...
+2025-07-06 14:57:14,150 - src.app - INFO - === END KT DEBUG ===
+2025-07-06 14:57:14,150 - src.app - WARNING - Using intelligent section detection for prompt: kt-analysis_prompt
+2025-07-06 14:57:14,150 - src.app - INFO - Detected 6 KT sections: ['Problem Description', 'Potential Causes', 'Data Collection', 'Root Cause', 'Solution', 'Cpe']
+2025-07-06 15:01:36,959 - __main__ - INFO - Starting MCP-based RCA Tool
+2025-07-06 15:01:37,158 - __main__ - INFO - Starting server on 0.0.0.0:8090
+2025-07-06 15:01:37,217 - src.app - INFO - MCP client initialized successfully
+2025-07-06 15:01:37,655 - src.app - INFO - MCP client initialized successfully
+2025-07-06 15:02:13,016 - src.app - INFO - Displaying results for prompt: kt-analysis_prompt
+2025-07-06 15:02:13,016 - src.app - INFO - Current selected_prompt: kt-analysis_prompt
+2025-07-06 15:02:13,016 - src.app - INFO - Analysis keys: ['problem_description', 'possible_causes', 'data_collection', 'root_cause', 'solution', 'raw_analysis', 'cpe', 'sources_used']
+2025-07-06 15:02:13,016 - src.app - INFO - === KT ANALYSIS DEBUG ===
+2025-07-06 15:02:13,016 - src.app - INFO - KT Key: 'problem_description' -> Value: ''
+2025-07-06 15:02:13,016 - src.app - INFO - KT Key: 'possible_causes' -> Value: ''
+2025-07-06 15:02:13,016 - src.app - INFO - KT Key: 'data_collection' -> Value: ''
+2025-07-06 15:02:13,016 - src.app - INFO - KT Key: 'root_cause' -> Value: 'Corruption in Zookeeper slice data causing missing or incorrect key:value pairs, leading to API call failures.'
+2025-07-06 15:02:13,016 - src.app - INFO - KT Key: 'solution' -> Value: ''
+2025-07-06 15:02:13,016 - src.app - INFO - KT Key: 'cpe' -> Value: 'CPE-9501'
+2025-07-06 15:02:13,016 - src.app - INFO - === END KT DEBUG ===
+2025-07-06 15:02:13,016 - src.app - WARNING - Using intelligent section detection for prompt: kt-analysis_prompt
+2025-07-06 15:02:13,016 - src.app - INFO - Detected 6 KT sections: ['Problem Description', 'Potential Causes', 'Data Collection', 'Root Cause', 'Solution', 'Cpe']
+2025-07-06 15:02:13,016 - src.app - INFO - KT processed fields are mostly empty, using raw_analysis
+2025-07-06 15:02:13,016 - src.app - INFO - Using raw_analysis with keys: ['executive_summary', 'problem_statement', 'timeline', 'root_cause', 'contributing_factors', 'impact_assessment', 'corrective_actions', 'preventive_measures', 'recommendations', 'escalation_needed', 'defect_tickets_needed', 'severity', 'priority', 'sources_used']
+2025-07-06 15:02:13,018 - src.app - INFO - Found unmapped analysis keys: ['executive_summary', 'problem_statement', 'timeline', 'contributing_factors', 'impact_assessment', 'corrective_actions', 'preventive_measures', 'recommendations', 'escalation_needed', 'defect_tickets_needed', 'severity', 'priority']
+2025-07-06 15:03:56,769 - src.app - INFO - MCP client initialized successfully
+2025-07-06 15:04:33,102 - src.app - INFO - Displaying results for prompt: kt-analysis_prompt
+2025-07-06 15:04:33,102 - src.app - INFO - Current selected_prompt: kt-analysis_prompt
+2025-07-06 15:04:33,102 - src.app - INFO - Analysis keys: ['problem_description', 'possible_causes', 'data_collection', 'root_cause', 'solution', 'raw_analysis', 'cpe', 'sources_used']
+2025-07-06 15:04:33,102 - src.app - INFO - === KT ANALYSIS DEBUG ===
+2025-07-06 15:04:33,102 - src.app - INFO - KT Key: 'problem_description' -> Value: ''
+2025-07-06 15:04:33,102 - src.app - INFO - KT Key: 'possible_causes' -> Value: ''
+2025-07-06 15:04:33,102 - src.app - INFO - KT Key: 'data_collection' -> Value: ''
+2025-07-06 15:04:33,102 - src.app - INFO - KT Key: 'root_cause' -> Value: 'Segmentation fault in the slice service caused by a metadata drive ejection on Node ID 6, leading to corrupted Zookeeper data.'
+2025-07-06 15:04:33,102 - src.app - INFO - KT Key: 'solution' -> Value: ''
+2025-07-06 15:04:33,102 - src.app - INFO - KT Key: 'cpe' -> Value: 'CPE-9501'
+2025-07-06 15:04:33,102 - src.app - INFO - === END KT DEBUG ===
+2025-07-06 15:04:33,102 - src.app - WARNING - Using intelligent section detection for prompt: kt-analysis_prompt
+2025-07-06 15:04:33,102 - src.app - INFO - Detected 6 KT sections: ['Problem Description', 'Potential Causes', 'Data Collection', 'Root Cause', 'Solution', 'Cpe']
+2025-07-06 15:04:33,102 - src.app - INFO - KT processed fields are mostly empty, using raw_analysis
+2025-07-06 15:04:33,102 - src.app - INFO - Using raw_analysis with keys: ['executive_summary', 'problem_statement', 'timeline', 'root_cause', 'contributing_factors', 'impact_assessment', 'corrective_actions', 'preventive_measures', 'recommendations', 'escalation_needed', 'defect_tickets_needed', 'severity', 'priority', 'sources_used']
+2025-07-06 15:04:33,103 - src.app - INFO - Found unmapped analysis keys: ['executive_summary', 'problem_statement', 'timeline', 'contributing_factors', 'impact_assessment', 'corrective_actions', 'preventive_measures', 'recommendations', 'escalation_needed', 'defect_tickets_needed', 'severity', 'priority']
+2025-07-06 15:05:23,072 - __main__ - INFO - Starting MCP-based RCA Tool
+2025-07-06 15:05:23,310 - __main__ - INFO - Starting server on 0.0.0.0:8090
+2025-07-06 15:05:23,368 - src.app - INFO - MCP client initialized successfully
+2025-07-06 15:05:23,616 - src.app - INFO - MCP client initialized successfully
+2025-07-06 15:05:37,606 - src.app - INFO - MCP client initialized successfully
+2025-07-06 15:05:48,732 - src.app - INFO - Displaying results for prompt: kt-analysis_prompt
+2025-07-06 15:05:48,733 - src.app - INFO - Current selected_prompt: kt-analysis_prompt
+2025-07-06 15:05:48,733 - src.app - INFO - Analysis keys: ['problem_description', 'possible_causes', 'data_collection', 'root_cause', 'solution', 'raw_analysis', 'cpe', 'sources_used']
+2025-07-06 15:05:48,733 - src.app - INFO - === KT ANALYSIS DEBUG ===
+2025-07-06 15:05:48,733 - src.app - INFO - KT Key: 'problem_description' -> Value: ''
+2025-07-06 15:05:48,733 - src.app - INFO - KT Key: 'possible_causes' -> Value: ''
+2025-07-06 15:05:48,733 - src.app - INFO - KT Key: 'data_collection' -> Value: ''
+2025-07-06 15:05:48,733 - src.app - INFO - KT Key: 'root_cause' -> Value: 'Corruption in Zookeeper slice information causing API calls to fail with missing or incorrect key-value pairs.'
+2025-07-06 15:05:48,733 - src.app - INFO - KT Key: 'solution' -> Value: ''
+2025-07-06 15:05:48,733 - src.app - INFO - KT Key: 'cpe' -> Value: 'CPE-9501'
+2025-07-06 15:05:48,733 - src.app - INFO - === END KT DEBUG ===
+2025-07-06 15:05:48,733 - src.app - WARNING - Using intelligent section detection for prompt: kt-analysis_prompt
+2025-07-06 15:05:48,733 - src.app - INFO - Detected 6 KT sections: ['Problem Description', 'Potential Causes', 'Data Collection', 'Root Cause', 'Solution', 'Cpe']
+2025-07-06 15:05:48,742 - src.app - INFO - KT processed fields are mostly empty, using raw_analysis
+2025-07-06 15:05:48,742 - src.app - INFO - Using raw_analysis with keys: ['executive_summary', 'problem_statement', 'timeline', 'root_cause', 'contributing_factors', 'impact_assessment', 'corrective_actions', 'preventive_measures', 'recommendations', 'escalation_needed', 'defect_tickets_needed', 'severity', 'priority', 'sources_used']
+2025-07-06 15:05:48,742 - src.app - INFO - Found unmapped analysis keys: ['executive_summary', 'problem_statement', 'timeline', 'contributing_factors', 'impact_assessment', 'corrective_actions', 'preventive_measures', 'recommendations', 'escalation_needed', 'defect_tickets_needed', 'severity', 'priority']
+2025-07-06 15:06:37,548 - __main__ - INFO - Starting MCP-based RCA Tool
+2025-07-06 15:06:37,749 - __main__ - INFO - Starting server on 0.0.0.0:8090
+2025-07-06 15:06:37,800 - src.app - INFO - MCP client initialized successfully
+2025-07-06 15:06:38,195 - src.app - INFO - MCP client initialized successfully
+2025-07-06 15:06:42,281 - src.app - INFO - MCP client initialized successfully
+2025-07-06 15:07:18,773 - __main__ - INFO - Starting MCP-based RCA Tool
+2025-07-06 15:07:19,023 - __main__ - INFO - Starting server on 0.0.0.0:8090
+2025-07-06 15:07:19,095 - src.app - INFO - MCP client initialized successfully
+2025-07-06 15:07:19,329 - src.app - INFO - MCP client initialized successfully
+2025-07-06 15:07:48,559 - src.app - INFO - Displaying results for prompt: kt-analysis_prompt
+2025-07-06 15:07:48,559 - src.app - INFO - Current selected_prompt: kt-analysis_prompt
+2025-07-06 15:07:48,559 - src.app - INFO - Analysis keys: ['problem_description', 'possible_causes', 'data_collection', 'root_cause', 'solution', 'raw_analysis', 'cpe', 'sources_used']
+2025-07-06 15:07:48,559 - src.app - INFO - === KT ANALYSIS DEBUG ===
+2025-07-06 15:07:48,559 - src.app - INFO - KT Key: 'problem_description' -> Value: ''
+2025-07-06 15:07:48,560 - src.app - INFO - KT Key: 'possible_causes' -> Value: ''
+2025-07-06 15:07:48,560 - src.app - INFO - KT Key: 'data_collection' -> Value: ''
+2025-07-06 15:07:48,560 - src.app - INFO - KT Key: 'root_cause' -> Value: 'Concurrent operations in Zookeeper causing serialization issues and corrupted slice information.'
+2025-07-06 15:07:48,560 - src.app - INFO - KT Key: 'solution' -> Value: ''
+2025-07-06 15:07:48,560 - src.app - INFO - KT Key: 'cpe' -> Value: 'CPE-9501'
+2025-07-06 15:07:48,560 - src.app - INFO - === END KT DEBUG ===
+2025-07-06 15:07:48,560 - src.app - WARNING - Using intelligent section detection for prompt: kt-analysis_prompt
+2025-07-06 15:07:48,560 - src.app - INFO - Detected 6 KT sections: ['Problem Description', 'Potential Causes', 'Data Collection', 'Root Cause', 'Solution', 'Cpe']
+2025-07-06 15:07:48,560 - src.app - INFO - KT processed fields are mostly empty, using raw_analysis
+2025-07-06 15:07:48,560 - src.app - INFO - Using raw_analysis with keys: ['executive_summary', 'problem_statement', 'timeline', 'root_cause', 'contributing_factors', 'impact_assessment', 'corrective_actions', 'preventive_measures', 'recommendations', 'escalation_needed', 'defect_tickets_needed', 'severity', 'priority', 'sources_used']
+2025-07-06 15:07:48,560 - src.app - INFO - Updated section mapping for raw_analysis with 13 sections: ['Executive Summary', 'Problem Statement', 'Timeline', 'Root Cause', 'Contributing Factors', 'Impact Assessment', 'Corrective Actions', 'Preventive Measures', 'Recommendations', 'Escalation Needed', 'Defect Tickets Needed', 'Severity', 'Priority']
+2025-07-06 15:13:51,400 - __main__ - INFO - Starting MCP-based RCA Tool
+2025-07-06 15:13:51,650 - __main__ - INFO - Starting server on 0.0.0.0:8090
+2025-07-06 15:13:51,711 - src.app - INFO - MCP client initialized successfully
+2025-07-06 15:13:52,026 - src.app - INFO - MCP client initialized successfully
+2025-07-06 15:13:59,348 - src.app - INFO - MCP client initialized successfully
+2025-07-06 15:14:43,292 - src.app - INFO - Displaying results for prompt: kt-analysis_prompt
+2025-07-06 15:14:43,292 - src.app - INFO - Current selected_prompt: kt-analysis_prompt
+2025-07-06 15:14:43,292 - src.app - INFO - Analysis keys: ['problem_description', 'possible_causes', 'data_collection', 'root_cause', 'solution', 'raw_analysis', 'cpe', 'sources_used']
+2025-07-06 15:14:43,293 - src.app - INFO - === KT ANALYSIS DEBUG ===
+2025-07-06 15:14:43,293 - src.app - INFO - KT Key: 'problem_description' -> Value: ''
+2025-07-06 15:14:43,293 - src.app - INFO - KT Key: 'possible_causes' -> Value: ''
+2025-07-06 15:14:43,293 - src.app - INFO - KT Key: 'data_collection' -> Value: ''
+2025-07-06 15:14:43,293 - src.app - INFO - KT Key: 'root_cause' -> Value: 'Corruption in SliceInfo and its substructures in Zookeeper, possibly due to concurrent operations causing missing JSON key-value pairs.'
+2025-07-06 15:14:43,293 - src.app - INFO - KT Key: 'solution' -> Value: ''
+2025-07-06 15:14:43,293 - src.app - INFO - KT Key: 'cpe' -> Value: 'CPE-9501'
+2025-07-06 15:14:43,293 - src.app - INFO - === END KT DEBUG ===
+2025-07-06 15:14:43,293 - src.app - WARNING - Using intelligent section detection for prompt: kt-analysis_prompt
+2025-07-06 15:14:43,293 - src.app - INFO - Detected 6 KT sections: ['Problem Description', 'Potential Causes', 'Data Collection', 'Root Cause', 'Solution', 'Cpe']
+2025-07-06 15:14:43,293 - src.app - INFO - KT processed fields are mostly empty, using raw_analysis
+2025-07-06 15:14:43,293 - src.app - INFO - Using raw_analysis with keys: ['executive_summary', 'problem_statement', 'timeline', 'root_cause', 'contributing_factors', 'impact_assessment', 'corrective_actions', 'preventive_measures', 'recommendations', 'escalation_needed', 'defect_tickets_needed', 'severity', 'priority', 'sources_used']
+2025-07-06 15:14:43,293 - src.app - INFO - Updated section mapping for raw_analysis with 13 sections: ['Executive Summary', 'Problem Statement', 'Timeline', 'Root Cause', 'Contributing Factors', 'Impact Assessment', 'Corrective Actions', 'Preventive Measures', 'Recommendations', 'Escalation Needed', 'Defect Tickets Needed', 'Severity', 'Priority']
