@@ -29,7 +29,11 @@ class RCAApp:
     }
     
     def __init__(self):
-        self.file_handler = FileHandler()
+        self.file_handler = FileHandler(
+            upload_dir=config.app_config['upload_directory'],
+            allowed_extensions=config.app_config['allowed_file_types'],
+            max_size_mb=config.app_config['max_file_size_mb']
+        )
         self.rca_engine = RCAEngine(config)
         
         # UI state
