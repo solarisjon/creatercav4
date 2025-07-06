@@ -62,6 +62,18 @@ class RCAGenerator:
         self.template_path = Path("data/rca_template.docx")
         self.output_dir = Path(config.app_config['output_directory'])
         self._template_prompts = None
+        self._netapp_context = None
+
+    def get_netapp_context(self):
+        """Lazily load and cache NetApp context from src/prompts/context_netapp if available."""
+        if self._netapp_context is None:
+            context_path = Path("src/prompts/context_netapp")
+            if context_path.exists():
+                with open(context_path, "r", encoding="utf-8") as f:
+                    self._netapp_context = f.read().strip()
+            else:
+                self._netapp_context = ""
+        return self._netapp_context
 
     def get_template_prompts(self):
         """Lazily load and cache prompts from the template docx."""
@@ -251,6 +263,11 @@ class RCAGenerator:
         try:
             # Prepare context for LLM
             context = self._prepare_llm_context(source_data, issue_description)
+
+            # Inject NetApp context if available
+            netapp_context = self.get_netapp_context()
+            if netapp_context:
+                context = f"NETAPP CONTEXT:\n{netapp_context}\n\n{context}"
 
             # Load the formal RCA prompt from file
             prompt_path = Path("src/prompts/formal_rca_prompt")
