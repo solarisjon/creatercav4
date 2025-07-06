@@ -403,7 +403,7 @@ class RCAApp:
                 logger.info("=== KT ANALYSIS DEBUG ===")
                 for key, value in analysis.items():
                     if key not in ['sources_used', 'raw_response', 'raw_analysis']:
-                        logger.info(f"KT Key: '{key}' -> Value: {str(value)[:100]}...")
+                        logger.info(f"KT Key: '{key}' -> Value: '{str(value)}'")
                 logger.info("=== END KT DEBUG ===")
             
             # Use the predefined PROMPT_REPORT_MAP instead of dynamic parsing
@@ -414,7 +414,7 @@ class RCAApp:
                 logger.warning(f"Using intelligent section detection for prompt: {prompt_file}")
                 analysis = self.analysis_result['analysis']
                 
-                # For KT analysis, try to detect numbered sections
+                # For KT analysis, always use intelligent detection since the predefined mapping often doesn't match LLM output
                 if prompt_file == "kt-analysis_prompt":
                     detected_mapping = []
                     
@@ -464,13 +464,14 @@ class RCAApp:
                             header = "Action Plan"
                         elif "follow" in key.lower():
                             header = "Follow-up"
+                        elif "data" in key.lower() and "collection" in key.lower():
+                            header = "Data Collection"
                         
                         detected_mapping.append((header, key))
                     
-                    # Use detected mapping if we found KT-style sections
-                    if detected_mapping:
-                        section_mapping = detected_mapping
-                        logger.info(f"Detected {len(detected_mapping)} KT sections: {[h for h, k in detected_mapping]}")
+                    # Always use detected mapping for KT analysis
+                    section_mapping = detected_mapping
+                    logger.info(f"Detected {len(detected_mapping)} KT sections: {[h for h, k in detected_mapping]}")
                 
                 # Fallback to analysis keys if no mapping found
                 if not section_mapping:
@@ -479,6 +480,24 @@ class RCAApp:
             ui.label(f"Report: {prompt_file.replace('_', ' ').title()}").classes('text-xl font-semibold mb-4')
 
             analysis = self.analysis_result['analysis']
+            
+            # Special handling for KT analysis - if the processed fields are mostly empty,
+            # check if we should use the raw_analysis instead
+            if prompt_file == "kt-analysis_prompt" and 'raw_analysis' in analysis:
+                # Check if the processed fields have actual content
+                main_fields = ['problem_description', 'possible_causes', 'data_collection', 'solution']
+                empty_fields = sum(1 for field in main_fields if not analysis.get(field, '').strip())
+                
+                # If most fields are empty, use raw_analysis which likely has the correct structure
+                if empty_fields >= len(main_fields) - 1:  # If 3 or more fields are empty
+                    logger.info("KT processed fields are mostly empty, using raw_analysis")
+                    raw_analysis = analysis.get('raw_analysis', {})
+                    if isinstance(raw_analysis, dict) and raw_analysis:
+                        # Merge raw_analysis with current analysis, keeping sources_used from processed
+                        sources_used = analysis.get('sources_used', [])
+                        analysis = raw_analysis.copy()
+                        analysis['sources_used'] = sources_used
+                        logger.info(f"Using raw_analysis with keys: {list(analysis.keys())}")
 
             # Show sources used at the top
             sources = analysis.get("sources_used")
@@ -535,8 +554,15 @@ class RCAApp:
                             logger.info(f"Found section '{header}' using key '{possible_key}' instead of '{expected_key}'")
                             break
                 
-                # Only show sections that have data
-                if value is not None and value != "" and value != "N/A":
+                # Only show sections that have data (be more lenient for KT analysis)
+                if prompt_file == "kt-analysis_prompt":
+                    # For KT analysis, show section if it has any non-empty content
+                    show_section = value is not None and str(value).strip() not in ["", "N/A", "None", "..."]
+                else:
+                    # For other analysis types, use stricter criteria
+                    show_section = value is not None and value != "" and value != "N/A"
+                
+                if show_section:
                     with ui.card().classes('w-full mb-4'):
                         ui.label(header).classes('text-lg font-semibold mb-2')
                         # Render HTML table if present
