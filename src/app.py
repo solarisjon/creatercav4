@@ -505,22 +505,43 @@ class RCAApp:
                             ui.markdown(str(value))
                         else:
                             ui.markdown("N/A")
-                # If a table is present in the analysis, render it
+                # If a table is present in the analysis, render it (support both dict and markdown/CSV string)
                 kt_table = analysis.get("problem_assessment_table")
-                if kt_table and isinstance(kt_table, list):
+                if kt_table:
                     with ui.card().classes('w-full mb-4'):
                         ui.label("Problem Assessment Table").classes('text-lg font-semibold mb-2')
-                        if isinstance(kt_table[0], dict):
-                            headers = list(kt_table[0].keys())
-                            ui.table(columns=[{"name": h, "label": h, "field": h} for h in headers],
-                                     rows=kt_table,
-                                     row_key=headers[0] if headers else None).classes('w-full')
-                        elif isinstance(kt_table[0], list):
-                            headers = kt_table[0]
-                            rows = [dict(zip(headers, row)) for row in kt_table[1:]]
-                            ui.table(columns=[{"name": h, "label": h, "field": h} for h in headers],
-                                     rows=rows,
-                                     row_key=headers[0] if headers else None).classes('w-full')
+                        # If it's a list of dicts or list of lists
+                        if isinstance(kt_table, list):
+                            if len(kt_table) > 0:
+                                if isinstance(kt_table[0], dict):
+                                    headers = list(kt_table[0].keys())
+                                    ui.table(columns=[{"name": h, "label": h, "field": h} for h in headers],
+                                             rows=kt_table,
+                                             row_key=headers[0] if headers else None).classes('w-full')
+                                elif isinstance(kt_table[0], list):
+                                    headers = kt_table[0]
+                                    rows = [dict(zip(headers, row)) for row in kt_table[1:]]
+                                    ui.table(columns=[{"name": h, "label": h, "field": h} for h in headers],
+                                             rows=rows,
+                                             row_key=headers[0] if headers else None).classes('w-full')
+                        elif isinstance(kt_table, str):
+                            # Try to render as markdown table if string
+                            if "|" in kt_table:
+                                ui.markdown(kt_table)
+                            else:
+                                # Try to parse as CSV
+                                import csv
+                                from io import StringIO
+                                reader = csv.reader(StringIO(kt_table))
+                                rows = list(reader)
+                                if rows:
+                                    headers = rows[0]
+                                    data_rows = [dict(zip(headers, row)) for row in rows[1:]]
+                                    ui.table(columns=[{"name": h, "label": h, "field": h} for h in headers],
+                                             rows=data_rows,
+                                             row_key=headers[0] if headers else None).classes('w-full')
+                                else:
+                                    ui.markdown(kt_table)
             else:
                 # Fallback: show all keys in analysis
                 for k, v in analysis.items():
