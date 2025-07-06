@@ -367,44 +367,6 @@ class RCAApp:
             self.update_tickets_display()
             ui.notify(f'Ticket removed: {removed_ticket}', type='info')
     
-    async def generate_analysis(self):
-        """Generate RCA analysis"""
-        try:
-            # Validate inputs
-            if not self.uploaded_files and not self.urls and not self.jira_tickets:
-                ui.notify('Please add at least one file, URL, or Jira ticket', type='negative')
-                return
-
-            # Show progress
-            self.progress_bar.visible = True
-            self.progress_bar.value = 0.1
-            ui.notify('Starting analysis...', type='info')
-
-            # Generate analysis with selected prompt
-            self.analysis_result = await rca_generator.generate_rca_analysis(
-                files=self.uploaded_files,
-                urls=self.urls,
-                jira_tickets=self.jira_tickets,
-                issue_description="",
-                prompt_file=self.selected_prompt
-            )
-
-            self.progress_bar.value = 1.0
-            self.display_results()
-            ui.notify('Analysis completed successfully!', type='positive')
-
-        except Exception as e:
-            error_msg = str(e)
-            if "insufficient_quota" in error_msg:
-                ui.notify('OpenAI quota exceeded. Switching to Anthropic...', type='warning')
-            elif "Expecting value" in error_msg:
-                ui.notify('LLM response parsing error. Check logs for details.', type='negative')
-            else:
-                ui.notify(f'Error generating analysis: {error_msg}', type='negative')
-            logger.error(f"Error generating analysis: {e}")
-        finally:
-            self.progress_bar.visible = False
-    
     def display_results(self):
         """Display analysis results"""
         if not self.analysis_result:
@@ -413,8 +375,15 @@ class RCAApp:
         self.results_container.clear()
 
         with self.results_container:
+            # Use the prompt file that was actually used for generation
+            prompt_file = self.analysis_result.get('prompt_file_used', self.selected_prompt)
+            
+            # Debug logging
+            logger.info(f"Displaying results for prompt: {prompt_file}")
+            logger.info(f"Current selected_prompt: {self.selected_prompt}")
+            logger.info(f"Analysis keys: {list(self.analysis_result.get('analysis', {}).keys())}")
+            
             # Dynamically parse the prompt file for section headers
-            prompt_file = self.selected_prompt
             prompt_path = Path(f"src/prompts/{prompt_file}")
             section_headers = []
             if prompt_path.exists():
@@ -491,7 +460,7 @@ class RCAApp:
                         ui.markdown("N/A")
 
             # Download Report for formal RCA only
-            if self.selected_prompt == "formal_rca_prompt":
+            if prompt_file == "formal_rca_prompt":
                 with ui.card().classes('w-full mb-4'):
                     ui.label('Report Download').classes('text-lg font-semibold mb-2')
                     doc_path = self.analysis_result['document_path']
@@ -547,8 +516,9 @@ class RCAApp:
     def on_prompt_select(self, e):
         """Handle prompt selection change from dropdown."""
         self.selected_prompt = e.value
-        # Optionally update the label display if needed
-        # (If you want to update the UI label dynamically, you can add logic here)
+        # Note: This only affects NEW analysis generation
+        # Existing results continue to show based on the prompt that was actually used
+        # This is the correct behavior to avoid confusion
 
     async def generate_analysis(self):
         """Generate RCA analysis"""
@@ -576,6 +546,9 @@ class RCAApp:
                 issue_description="",
                 prompt_file=prompt_file
             )
+            
+            # Store the prompt file used for this analysis
+            self.analysis_result['prompt_file_used'] = prompt_file
 
             self.progress_bar.value = 1.0
             self.display_results()
