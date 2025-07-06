@@ -352,10 +352,10 @@ class RCAGenerator:
 
             # Optionally, post-process the analysis to ensure it matches the expected fields for the selected prompt
             if expected_fields:
-                # Only keep expected fields, add a warning if missing
+                # Only keep expected fields, but do not add warning if missing—just leave blank
                 processed = {}
                 for field in expected_fields:
-                    processed[field] = analysis.get(field, f"Field '{field}' not found in LLM output.")
+                    processed[field] = analysis.get(field, "")
                 # Also include the raw analysis for reference
                 processed["raw_analysis"] = analysis
                 return processed
