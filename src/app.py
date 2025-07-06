@@ -507,6 +507,51 @@ class RCAApp:
     def on_prompt_select(self, e):
         """Handle prompt selection change from dropdown."""
         self.selected_prompt = e.value
+        # Optionally update the label display if needed
+        # (If you want to update the UI label dynamically, you can add logic here)
+
+    async def generate_analysis(self):
+        """Generate RCA analysis"""
+        try:
+            # Validate inputs
+            if not self.uploaded_files and not self.urls and not self.jira_tickets:
+                ui.notify('Please add at least one file, URL, or Jira ticket', type='negative')
+                return
+
+            # Show progress
+            self.progress_bar.visible = True
+            self.progress_bar.value = 0.1
+            ui.notify('Starting RCA analysis...', type='info')
+
+            # Determine which prompt file to use based on selection
+            prompt_file = self.selected_prompt
+            # Map the prompt selection to the correct file if needed
+            # (Assumes the prompt file names match the values in PROMPT_OPTIONS)
+
+            # Generate analysis with selected prompt
+            self.analysis_result = await rca_generator.generate_rca_analysis(
+                files=self.uploaded_files,
+                urls=self.urls,
+                jira_tickets=self.jira_tickets,
+                issue_description="",
+                prompt_file=prompt_file
+            )
+
+            self.progress_bar.value = 1.0
+            self.display_results()
+            ui.notify('RCA analysis completed successfully!', type='positive')
+
+        except Exception as e:
+            error_msg = str(e)
+            if "insufficient_quota" in error_msg:
+                ui.notify('OpenAI quota exceeded. Switching to Anthropic...', type='warning')
+            elif "Expecting value" in error_msg:
+                ui.notify('LLM response parsing error. Check logs for details.', type='negative')
+            else:
+                ui.notify(f'Error generating analysis: {error_msg}', type='negative')
+            logger.error(f"Error generating analysis: {e}")
+        finally:
+            self.progress_bar.visible = False
 
     def read_executive_summary(self):
         """Read aloud the Executive Summary section if available."""

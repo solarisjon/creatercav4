@@ -299,6 +299,29 @@ class RCAGenerator:
                     f"\nContext:\n{context}"
                 )
 
+            # Vary output parsing/structure based on prompt_file
+            # (You can add more sophisticated logic here if needed)
+            if prompt_file == "formal_rca_prompt":
+                # Expect a full RCA structure
+                expected_fields = [
+                    "executive_summary", "problem_statement", "timeline", "root_cause",
+                    "contributing_factors", "impact_assessment", "corrective_actions",
+                    "preventive_measures", "recommendations", "escalation_needed",
+                    "defect_tickets_needed", "severity", "priority"
+                ]
+            elif prompt_file == "initial_analysis_prompt":
+                # Expect a high-level summary, less detail
+                expected_fields = [
+                    "overview", "key_findings", "summary", "recommendations"
+                ]
+            elif prompt_file == "kt-analysis_prompt":
+                # KT-style problem assessment
+                expected_fields = [
+                    "problem_description", "possible_causes", "data_collection", "root_cause", "solution"
+                ]
+            else:
+                expected_fields = []
+
             # Generate analysis using configured LLM
             if self.config['default_llm'] == 'openai':
                 try:
@@ -327,7 +350,17 @@ class RCAGenerator:
             else:
                 raise ValueError(f"Unsupported LLM: {self.config['default_llm']}")
 
-            return analysis
+            # Optionally, post-process the analysis to ensure it matches the expected fields for the selected prompt
+            if expected_fields:
+                # Only keep expected fields, add a warning if missing
+                processed = {}
+                for field in expected_fields:
+                    processed[field] = analysis.get(field, f"Field '{field}' not found in LLM output.")
+                # Also include the raw analysis for reference
+                processed["raw_analysis"] = analysis
+                return processed
+            else:
+                return analysis
 
         except Exception as e:
             logger.error(f"Failed to generate analysis: {e}")
