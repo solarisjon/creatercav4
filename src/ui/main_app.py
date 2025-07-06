@@ -34,7 +34,12 @@ class RCAApp:
             allowed_extensions=config.app_config['allowed_file_types'],
             max_size_mb=config.app_config['max_file_size_mb']
         )
-        self.rca_engine = RCAEngine(config)
+        # Create a combined config for RCAEngine that includes both LLM and app configs
+        rca_config = {
+            **config.llm_config,
+            'output_directory': config.app_config['output_directory']
+        }
+        self.rca_engine = RCAEngine(rca_config)
         
         # UI state
         self.uploaded_files = []
