@@ -78,12 +78,12 @@ class RCAApp:
                 ui.label('Select Analysis Type').classes('text-lg font-semibold mb-2 text-[#0067c5]')
                 self.prompt_label_map = {value: label for label, value in self.PROMPT_OPTIONS}
                 self.prompt_select = ui.select(
-                    options=[value for _, value in self.PROMPT_OPTIONS],
+                    options=[{"label": label, "value": value} for label, value in self.PROMPT_OPTIONS],
                     value=self.selected_prompt,
                     on_change=self.on_prompt_select
                 ).classes('w-full mb-2')
                 # Show the label for the current selection
-                ui.label(lambda: f"Current: {self.prompt_label_map.get(self.selected_prompt, self.selected_prompt)}").classes('text-xs text-gray-500 mb-1')
+                ui.label(f"Current: {self.prompt_label_map.get(self.selected_prompt, self.selected_prompt)}").classes('text-xs text-gray-500 mb-1')
                 ui.markdown(
                     "Choose the type of analysis you want to generate. "
                     "**Formal RCA**: Full root cause analysis. "
