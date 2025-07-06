@@ -88,8 +88,9 @@ class RCAGenerator:
                                    files: List[str], 
                                    urls: List[str], 
                                    jira_tickets: List[str],
-                                   issue_description: str) -> Dict[str, Any]:
-        """Generate RCA analysis based on provided inputs"""
+                                   issue_description: str,
+                                   prompt_file: str = "formal_rca_prompt") -> Dict[str, Any]:
+        """Generate RCA analysis based on provided inputs and selected prompt file"""
         try:
             logger.info("Starting RCA analysis generation")
             
@@ -97,7 +98,7 @@ class RCAGenerator:
             source_data = await self._collect_source_data(files, urls, jira_tickets)
             
             # Generate analysis using LLM
-            analysis = await self._generate_analysis(source_data, issue_description)
+            analysis = await self._generate_analysis(source_data, issue_description, prompt_file)
 
             # --- Inject key fields for template mapping ---
             # 1. Case: look for a support case number (SAP case) in files or filenames
@@ -258,8 +259,8 @@ class RCAGenerator:
         
         return source_data
     
-    async def _generate_analysis(self, source_data: Dict[str, Any], issue_description: str) -> Dict[str, Any]:
-        """Generate RCA analysis using LLM, using the formal prompt from src/prompts/formal_rca_prompt"""
+    async def _generate_analysis(self, source_data: Dict[str, Any], issue_description: str, prompt_file: str = "formal_rca_prompt") -> Dict[str, Any]:
+        """Generate RCA analysis using LLM, using the selected prompt from src/prompts/"""
         try:
             # Prepare context for LLM
             context = self._prepare_llm_context(source_data, issue_description)
@@ -269,8 +270,8 @@ class RCAGenerator:
             if netapp_context:
                 context = f"NETAPP CONTEXT:\n{netapp_context}\n\n{context}"
 
-            # Load the formal RCA prompt from file
-            prompt_path = Path("src/prompts/formal_rca_prompt")
+            # Load the selected prompt from file
+            prompt_path = Path(f"src/prompts/{prompt_file}")
             if prompt_path.exists():
                 with open(prompt_path, "r", encoding="utf-8") as f:
                     base_prompt = f.read().strip()

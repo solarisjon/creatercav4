@@ -19,6 +19,12 @@ from src.rca_generator import rca_generator
 logger = setup_logger(__name__)
 
 class RCAApp:
+    PROMPT_OPTIONS = [
+        ("Formal RCA", "formal_rca_prompt"),
+        ("Overview Analysis", "initial_analysis_prompt"),
+        ("Problem Assessment", "kt-analysis_prompt"),
+    ]
+
     def __init__(self):
         self.config = config.app_config
         self.file_handler = FileHandler(
@@ -30,6 +36,7 @@ class RCAApp:
         self.urls: List[str] = []
         self.jira_tickets: List[str] = []
         self.analysis_result: Optional[dict] = None
+        self.selected_prompt: str = "formal_rca_prompt"
         
     async def initialize(self):
         """Initialize MCP client and other components"""
@@ -65,6 +72,21 @@ class RCAApp:
                 ui.image('https://www.netapp.com/wp-content/uploads/2021/05/netapp-logo.png').classes('netapp-logo')
                 ui.label('Root Cause Analysis Tool').classes('netapp-title')
                 ui.label('Powered by MCP & LLM').classes('ml-4 netapp-subtitle')
+
+            # Prompt Selection Dropdown
+            with ui.card().classes('w-full mb-6 netapp-card'):
+                ui.label('Select Analysis Type').classes('text-lg font-semibold mb-2 text-[#0067c5]')
+                self.prompt_select = ui.select(
+                    options=[{"label": label, "value": value} for label, value in self.PROMPT_OPTIONS],
+                    value=self.selected_prompt,
+                    on_change=self.on_prompt_select
+                ).classes('w-full mb-2')
+                ui.markdown(
+                    "Choose the type of analysis you want to generate. "
+                    "**Formal RCA**: Full root cause analysis. "
+                    "**Overview Analysis**: High-level summary. "
+                    "**Problem Assessment**: KT-style problem assessment."
+                ).classes('text-sm')
 
             # Instructions
             with ui.card().classes('w-full mb-6 netapp-card'):
@@ -322,24 +344,25 @@ class RCAApp:
             if not self.uploaded_files and not self.urls and not self.jira_tickets:
                 ui.notify('Please add at least one file, URL, or Jira ticket', type='negative')
                 return
-            
+
             # Show progress
             self.progress_bar.visible = True
             self.progress_bar.value = 0.1
             ui.notify('Starting RCA analysis...', type='info')
-            
-            # Generate analysis
+
+            # Generate analysis with selected prompt
             self.analysis_result = await rca_generator.generate_rca_analysis(
                 files=self.uploaded_files,
                 urls=self.urls,
                 jira_tickets=self.jira_tickets,
-                issue_description=""
+                issue_description="",
+                prompt_file=self.selected_prompt
             )
-            
+
             self.progress_bar.value = 1.0
             self.display_results()
             ui.notify('RCA analysis completed successfully!', type='positive')
-            
+
         except Exception as e:
             error_msg = str(e)
             if "insufficient_quota" in error_msg:
@@ -467,13 +490,20 @@ class RCAApp:
         self.urls.clear()
         self.jira_tickets.clear()
         self.analysis_result = None
-        
+        self.selected_prompt = "formal_rca_prompt"
+        if hasattr(self, "prompt_select"):
+            self.prompt_select.value = self.selected_prompt
+
         self.update_files_display()
         self.update_urls_display()
         self.update_tickets_display()
         self.results_container.clear()
-        
+
         ui.notify('All data cleared', type='info')
+
+    def on_prompt_select(self, e):
+        """Handle prompt selection change from dropdown."""
+        self.selected_prompt = e.value
 
     def read_executive_summary(self):
         """Read aloud the Executive Summary section if available."""
