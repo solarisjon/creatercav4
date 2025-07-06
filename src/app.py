@@ -48,7 +48,6 @@ class RCAApp:
             ("Data Collection", "data_collection"),
             ("Root Cause", "root_cause"),
             ("Solution", "solution"),
-            # Table will be handled separately
         ],
     }
     PROMPT_OPTIONS = [
@@ -383,30 +382,15 @@ class RCAApp:
             logger.info(f"Current selected_prompt: {self.selected_prompt}")
             logger.info(f"Analysis keys: {list(self.analysis_result.get('analysis', {}).keys())}")
             
-            # Dynamically parse the prompt file for section headers
-            prompt_path = Path(f"src/prompts/{prompt_file}")
-            section_headers = []
-            if prompt_path.exists():
-                with open(prompt_path, "r", encoding="utf-8") as f:
-                    lines = f.readlines()
-                # Section header: line with at least 2 leading # or a line in ALL CAPS or starting with a number and dot
-                for line in lines:
-                    l = line.strip()
-                    if not l:
-                        continue
-                    if l.startswith("--") or l.startswith("##") or l.startswith("#"):
-                        # Remove leading dashes/hashes and whitespace
-                        header = l.lstrip("-#").strip()
-                        if header:
-                            section_headers.append(header)
-                    elif l and (l.isupper() and len(l) > 5):
-                        section_headers.append(l.title())
-                    elif l and (l[0].isdigit() and l[1:3] == ". "):
-                        section_headers.append(l)
-            else:
-                # fallback: use keys in analysis
-                section_headers = [k.replace("_", " ").title() for k in self.analysis_result['analysis'].keys() if k != "raw_analysis"]
-
+            # Use the predefined PROMPT_REPORT_MAP instead of dynamic parsing
+            section_mapping = self.PROMPT_REPORT_MAP.get(prompt_file, [])
+            
+            # If no predefined mapping exists, fallback to analysis keys
+            if not section_mapping:
+                logger.warning(f"No predefined mapping found for prompt: {prompt_file}, using analysis keys")
+                analysis = self.analysis_result['analysis']
+                section_mapping = [(k.replace("_", " ").title(), k) for k in analysis.keys() if k != "raw_analysis"]
+            
             ui.label(f"Report: {prompt_file.replace('_', ' ').title()}").classes('text-xl font-semibold mb-4')
 
             analysis = self.analysis_result['analysis']
@@ -419,45 +403,86 @@ class RCAApp:
                     for src in sources:
                         ui.markdown(f"- {src}")
 
-            # For each section header, try to find a matching key in analysis (case-insensitive, underscores/space-insensitive)
-            shown_keys = set()
-            for header in section_headers:
-                norm_header = header.lower().replace(" ", "_")
-                key = None
-                # Try direct match
-                for k in analysis.keys():
-                    if k.lower().replace(" ", "_") == norm_header:
-                        key = k
-                        break
-                # Try partial match
-                if key is None:
-                    for k in analysis.keys():
-                        if norm_header in k.lower().replace(" ", "_") or k.lower().replace(" ", "_") in norm_header:
-                            key = k
+            # Use the predefined section mapping with fallback logic
+            for header, expected_key in section_mapping:
+                # Try exact match first
+                value = analysis.get(expected_key)
+                
+                # If no exact match, try fuzzy matching
+                if value is None:
+                    # Try variations of the key
+                    possible_keys = [
+                        expected_key,
+                        expected_key.replace("_", ""),
+                        expected_key.replace("_", " "),
+                        expected_key.lower(),
+                        expected_key.upper(),
+                        header.lower().replace(" ", "_"),
+                        header.lower().replace(" ", ""),
+                    ]
+                    
+                    for possible_key in possible_keys:
+                        if possible_key in analysis:
+                            value = analysis[possible_key]
+                            logger.info(f"Found section '{header}' using key '{possible_key}' instead of '{expected_key}'")
                             break
-                value = analysis.get(key) if key else None
-                shown_keys.add(key)
+                
+                # Only show sections that have data
+                if value is not None and value != "" and value != "N/A":
+                    with ui.card().classes('w-full mb-4'):
+                        ui.label(header).classes('text-lg font-semibold mb-2')
+                        # Render HTML table if present
+                        if isinstance(value, str) and "<table" in value:
+                            ui.html(value)
+                        # Render markdown table if present
+                        elif isinstance(value, str) and "|" in value and value.count("|") > 2:
+                            # Convert markdown table to HTML for nice formatting
+                            try:
+                                import markdown
+                                from markdown.extensions.tables import TableExtension
+                                html = markdown.markdown(value, extensions=[TableExtension()])
+                                ui.html(html)
+                            except ImportError:
+                                # Fallback if markdown is not installed
+                                ui.code(value).classes('w-full')
+                        # Render list as bullet points
+                        elif isinstance(value, list):
+                            for v in value:
+                                ui.markdown(f"• {v}")
+                        # Render as plain text
+                        else:
+                            ui.markdown(str(value))
+                else:
+                    logger.debug(f"Skipping section '{header}' - no data found for key '{expected_key}'")
+            
+            # Show any unmapped sections that exist in the analysis
+            mapped_keys = [key for _, key in section_mapping]
+            unmapped_keys = [k for k in analysis.keys() if k not in mapped_keys and k not in ['sources_used', 'raw_response', 'raw_analysis']]
+            
+            if unmapped_keys:
+                logger.info(f"Found unmapped analysis keys: {unmapped_keys}")
                 with ui.card().classes('w-full mb-4'):
-                    ui.label(header).classes('text-lg font-semibold mb-2')
-                    # Render HTML table if present
-                    if isinstance(value, str) and "<table" in value:
-                        ui.html(value)
-                    # Render markdown table if present
-                    elif isinstance(value, str) and "|" in value and value.count("|") > 2:
-                        # Convert markdown table to HTML for nice formatting
-                        import markdown
-                        from markdown.extensions.tables import TableExtension
-                        html = markdown.markdown(value, extensions=[TableExtension()])
-                        ui.html(html)
-                    # Render list as bullet points
-                    elif isinstance(value, list):
-                        for v in value:
-                            ui.markdown(f"• {v}")
-                    # Render as plain text
-                    elif value is not None:
-                        ui.markdown(str(value))
-                    else:
-                        ui.markdown("N/A")
+                    ui.label("Additional Sections").classes('text-lg font-semibold mb-2')
+                    for key in unmapped_keys:
+                        value = analysis[key]
+                        if value and value != "" and value != "N/A":
+                            ui.label(key.replace("_", " ").title()).classes('text-md font-medium mb-1')
+                            if isinstance(value, str) and "<table" in value:
+                                ui.html(value)
+                            elif isinstance(value, str) and "|" in value and value.count("|") > 2:
+                                try:
+                                    import markdown
+                                    from markdown.extensions.tables import TableExtension
+                                    html = markdown.markdown(value, extensions=[TableExtension()])
+                                    ui.html(html)
+                                except ImportError:
+                                    ui.code(value).classes('w-full')
+                            elif isinstance(value, list):
+                                for v in value:
+                                    ui.markdown(f"• {v}")
+                            else:
+                                ui.markdown(str(value))
+                            ui.separator().classes('my-2')
 
             # Download Report for formal RCA only
             if prompt_file == "formal_rca_prompt":
