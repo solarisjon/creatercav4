@@ -462,7 +462,33 @@ class RCAApp:
             # Download Report
             with ui.card().classes('w-full mb-4'):
                 ui.label('Report Download').classes('text-lg font-semibold mb-2')
-                ui.markdown(f"Report saved to: `{self.analysis_result['document_path']}`")
+                doc_path = self.analysis_result['document_path']
+                ui.markdown(f"Report saved to: `{doc_path}`")
+                # If the report is a .docx file, offer a download link
+                if doc_path.endswith('.docx'):
+                    # Serve the file via NiceGUI static files
+                    from nicegui import app
+                    import os
+                    static_url = None
+                    static_dir = os.path.dirname(doc_path)
+                    static_file = os.path.basename(doc_path)
+                    # Register the output directory as a static folder if not already
+                    if not hasattr(app, "_rca_static_registered"):
+                        app.add_static_files('/output', static_dir)
+                        app._rca_static_registered = True
+                    static_url = f"/output/{static_file}"
+                    ui.markdown(f"[⬇️ Download Word Report]({static_url})")
+                elif doc_path.endswith('.json'):
+                    from nicegui import app
+                    import os
+                    static_url = None
+                    static_dir = os.path.dirname(doc_path)
+                    static_file = os.path.basename(doc_path)
+                    if not hasattr(app, "_rca_static_registered_json"):
+                        app.add_static_files('/output', static_dir)
+                        app._rca_static_registered_json = True
+                    static_url = f"/output/{static_file}"
+                    ui.markdown(f"[⬇️ Download JSON Report]({static_url})")
     
     def clear_all(self):
         """Clear all inputs and results"""
