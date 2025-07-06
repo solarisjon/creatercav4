@@ -19,6 +19,38 @@ from src.rca_generator import rca_generator
 logger = setup_logger(__name__)
 
 class RCAApp:
+    # Centralized mapping of prompt options to their reporting sections
+    PROMPT_REPORT_MAP = {
+        "formal_rca_prompt": [
+            ("Executive Summary", "executive_summary"),
+            ("Problem Statement", "problem_statement"),
+            ("Timeline", "timeline"),
+            ("Root Cause", "root_cause"),
+            ("Contributing Factors", "contributing_factors"),
+            ("Impact Assessment", "impact_assessment"),
+            ("Corrective Actions", "corrective_actions"),
+            ("Preventive Measures", "preventive_measures"),
+            ("Recommendations", "recommendations"),
+            ("Escalation Needed", "escalation_needed"),
+            ("Defect Tickets Needed", "defect_tickets_needed"),
+            ("Severity", "severity"),
+            ("Priority", "priority"),
+        ],
+        "initial_analysis_prompt": [
+            ("Overview", "overview"),
+            ("Key Findings", "key_findings"),
+            ("Summary", "summary"),
+            ("Recommendations", "recommendations"),
+        ],
+        "kt-analysis_prompt": [
+            ("Problem Description", "problem_description"),
+            ("Possible Causes", "possible_causes"),
+            ("Data Collection", "data_collection"),
+            ("Root Cause", "root_cause"),
+            ("Solution", "solution"),
+            # Table will be handled separately
+        ],
+    }
     PROMPT_OPTIONS = [
         ("Formal RCA", "formal_rca_prompt"),
         ("Overview Analysis", "initial_analysis_prompt"),
@@ -400,24 +432,9 @@ class RCAApp:
                     for src in sources:
                         ui.markdown(f"- {src}")
 
-            # Dynamic section display based on prompt
-            if self.selected_prompt == "formal_rca_prompt":
-                # Show all major RCA sections and offer download
-                sections = [
-                    ("Executive Summary", "executive_summary"),
-                    ("Problem Statement", "problem_statement"),
-                    ("Timeline", "timeline"),
-                    ("Root Cause", "root_cause"),
-                    ("Contributing Factors", "contributing_factors"),
-                    ("Impact Assessment", "impact_assessment"),
-                    ("Corrective Actions", "corrective_actions"),
-                    ("Preventive Measures", "preventive_measures"),
-                    ("Recommendations", "recommendations"),
-                    ("Escalation Needed", "escalation_needed"),
-                    ("Defect Tickets Needed", "defect_tickets_needed"),
-                    ("Severity", "severity"),
-                    ("Priority", "priority"),
-                ]
+            # Use the central mapping for report sections
+            sections = self.PROMPT_REPORT_MAP.get(self.selected_prompt)
+            if sections:
                 for header, key in sections:
                     value = analysis.get(key)
                     with ui.card().classes('w-full mb-4'):
@@ -429,119 +446,69 @@ class RCAApp:
                             ui.markdown(str(value))
                         else:
                             ui.markdown("N/A")
-                # Download Report
-                with ui.card().classes('w-full mb-4'):
-                    ui.label('Report Download').classes('text-lg font-semibold mb-2')
-                    doc_path = self.analysis_result['document_path']
-                    ui.markdown(f"Report saved to: `{doc_path}`")
-                    # If the report is a .docx file, offer a download link
-                    if doc_path.endswith('.docx'):
-                        from nicegui import app
-                        import os
-                        static_url = None
-                        static_dir = os.path.dirname(doc_path)
-                        static_file = os.path.basename(doc_path)
-                        if not hasattr(app, "_rca_static_registered"):
-                            app.add_static_files('/output', static_dir)
-                            app._rca_static_registered = True
-                        static_url = f"/output/{static_file}"
-                        ui.markdown(f"[⬇️ Download Word Report]({static_url})")
-                    elif doc_path.endswith('.json'):
-                        from nicegui import app
-                        import os
-                        static_url = None
-                        static_dir = os.path.dirname(doc_path)
-                        static_file = os.path.basename(doc_path)
-                        if not hasattr(app, "_rca_static_registered_json"):
-                            app.add_static_files('/output', static_dir)
-                            app._rca_static_registered_json = True
-                        static_url = f"/output/{static_file}"
-                        ui.markdown(f"[⬇️ Download JSON Report]({static_url})")
-            elif self.selected_prompt == "initial_analysis_prompt":
-                # Only display the sections present in the prompt file
-                prompt_path = Path(f"src/prompts/{self.selected_prompt}")
-                prompt_sections = []
-                if prompt_path.exists():
-                    with open(prompt_path, "r", encoding="utf-8") as f:
-                        lines = f.readlines()
-                    # Find section headers (lines starting with -- or similar, or capitalized)
-                    for line in lines:
-                        line = line.strip()
-                        if line and (line.startswith("--") or (line.isupper() and len(line) > 5)):
-                            prompt_sections.append(line.strip("- ").replace("_", " ").title())
-                # Fallback to keys in analysis if no headers found
-                if not prompt_sections:
-                    prompt_sections = [k.replace("_", " ").title() for k in analysis.keys() if k != "raw_analysis"]
-                for section in prompt_sections:
-                    # Try to find a matching key
-                    key = section.lower().replace(" ", "_")
-                    value = analysis.get(key)
-                    with ui.card().classes('w-full mb-4'):
-                        ui.label(section).classes('text-lg font-semibold mb-2')
-                        if isinstance(value, list):
-                            for v in value:
-                                ui.markdown(f"• {v}")
-                        elif value is not None:
-                            ui.markdown(str(value))
-                        else:
-                            ui.markdown("N/A")
-            elif self.selected_prompt == "kt-analysis_prompt":
-                # Show KT-style sections and render a table if present
-                sections = [
-                    ("Problem Description", "problem_description"),
-                    ("Possible Causes", "possible_causes"),
-                    ("Data Collection", "data_collection"),
-                    ("Root Cause", "root_cause"),
-                    ("Solution", "solution"),
-                ]
-                for header, key in sections:
-                    value = analysis.get(key)
-                    with ui.card().classes('w-full mb-4'):
-                        ui.label(header).classes('text-lg font-semibold mb-2')
-                        if isinstance(value, list):
-                            for v in value:
-                                ui.markdown(f"• {v}")
-                        elif value is not None:
-                            ui.markdown(str(value))
-                        else:
-                            ui.markdown("N/A")
-                # If a table is present in the analysis, render it (support both dict and markdown/CSV string)
-                kt_table = analysis.get("problem_assessment_table")
-                if kt_table:
-                    with ui.card().classes('w-full mb-4'):
-                        ui.label("Problem Assessment Table").classes('text-lg font-semibold mb-2')
-                        # If it's a list of dicts or list of lists
-                        if isinstance(kt_table, list):
-                            if len(kt_table) > 0:
-                                if isinstance(kt_table[0], dict):
-                                    headers = list(kt_table[0].keys())
-                                    ui.table(columns=[{"name": h, "label": h, "field": h} for h in headers],
-                                             rows=kt_table,
-                                             row_key=headers[0] if headers else None).classes('w-full')
-                                elif isinstance(kt_table[0], list):
-                                    headers = kt_table[0]
-                                    rows = [dict(zip(headers, row)) for row in kt_table[1:]]
-                                    ui.table(columns=[{"name": h, "label": h, "field": h} for h in headers],
-                                             rows=rows,
-                                             row_key=headers[0] if headers else None).classes('w-full')
-                        elif isinstance(kt_table, str):
-                            # Try to render as markdown table if string
-                            if "|" in kt_table:
-                                ui.markdown(kt_table)
-                            else:
-                                # Try to parse as CSV
-                                import csv
-                                from io import StringIO
-                                reader = csv.reader(StringIO(kt_table))
-                                rows = list(reader)
-                                if rows:
-                                    headers = rows[0]
-                                    data_rows = [dict(zip(headers, row)) for row in rows[1:]]
-                                    ui.table(columns=[{"name": h, "label": h, "field": h} for h in headers],
-                                             rows=data_rows,
-                                             row_key=headers[0] if headers else None).classes('w-full')
-                                else:
+                # Special handling for KT table
+                if self.selected_prompt == "kt-analysis_prompt":
+                    kt_table = analysis.get("problem_assessment_table")
+                    if kt_table:
+                        with ui.card().classes('w-full mb-4'):
+                            ui.label("Problem Assessment Table").classes('text-lg font-semibold mb-2')
+                            if isinstance(kt_table, list):
+                                if len(kt_table) > 0:
+                                    if isinstance(kt_table[0], dict):
+                                        headers = list(kt_table[0].keys())
+                                        ui.table(columns=[{"name": h, "label": h, "field": h} for h in headers],
+                                                 rows=kt_table,
+                                                 row_key=headers[0] if headers else None).classes('w-full')
+                                    elif isinstance(kt_table[0], list):
+                                        headers = kt_table[0]
+                                        rows = [dict(zip(headers, row)) for row in kt_table[1:]]
+                                        ui.table(columns=[{"name": h, "label": h, "field": h} for h in headers],
+                                                 rows=rows,
+                                                 row_key=headers[0] if headers else None).classes('w-full')
+                            elif isinstance(kt_table, str):
+                                if "|" in kt_table:
                                     ui.markdown(kt_table)
+                                else:
+                                    import csv
+                                    from io import StringIO
+                                    reader = csv.reader(StringIO(kt_table))
+                                    rows = list(reader)
+                                    if rows:
+                                        headers = rows[0]
+                                        data_rows = [dict(zip(headers, row)) for row in rows[1:]]
+                                        ui.table(columns=[{"name": h, "label": h, "field": h} for h in headers],
+                                                 rows=data_rows,
+                                                 row_key=headers[0] if headers else None).classes('w-full')
+                                    else:
+                                        ui.markdown(kt_table)
+                # Download Report for formal RCA only
+                if self.selected_prompt == "formal_rca_prompt":
+                    with ui.card().classes('w-full mb-4'):
+                        ui.label('Report Download').classes('text-lg font-semibold mb-2')
+                        doc_path = self.analysis_result['document_path']
+                        ui.markdown(f"Report saved to: `{doc_path}`")
+                        if doc_path.endswith('.docx'):
+                            from nicegui import app
+                            import os
+                            static_url = None
+                            static_dir = os.path.dirname(doc_path)
+                            static_file = os.path.basename(doc_path)
+                            if not hasattr(app, "_rca_static_registered"):
+                                app.add_static_files('/output', static_dir)
+                                app._rca_static_registered = True
+                            static_url = f"/output/{static_file}"
+                            ui.markdown(f"[⬇️ Download Word Report]({static_url})")
+                        elif doc_path.endswith('.json'):
+                            from nicegui import app
+                            import os
+                            static_url = None
+                            static_dir = os.path.dirname(doc_path)
+                            static_file = os.path.basename(doc_path)
+                            if not hasattr(app, "_rca_static_registered_json"):
+                                app.add_static_files('/output', static_dir)
+                                app._rca_static_registered_json = True
+                            static_url = f"/output/{static_file}"
+                            ui.markdown(f"[⬇️ Download JSON Report]({static_url})")
             else:
                 # Fallback: show all keys in analysis
                 for k, v in analysis.items():
