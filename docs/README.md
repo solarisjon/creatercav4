@@ -1,4 +1,4 @@
-# NetApp RCA Tool
+# MCP-based Root Cause Analysis Tool
 
 A modern web-based Root Cause Analysis (RCA) tool that leverages Model Context Protocol (MCP) servers for enhanced data access and analysis. Features a clean, modular architecture for maintainability and extensibility.
 
@@ -6,7 +6,7 @@ A modern web-based Root Cause Analysis (RCA) tool that leverages Model Context P
 
 - **Multi-Source Data Integration**: Process PDF files, web URLs, and Jira tickets
 - **MCP Server Architecture**: Uses Model Context Protocol for efficient data access
-- **Modern Web UI**: Built with NiceGUI for responsive, interactive experience with NetApp branding
+- **Modern Web UI**: Built with NiceGUI for responsive, interactive experience
 - **Jira Integration**: Read and reference existing Jira tickets with linked issue support
 - **Comprehensive Analysis**: Generate detailed RCA reports with LLM assistance
 - **Multi-LLM Support**: Works with OpenAI GPT, Anthropic Claude, OpenRouter, and corporate LLM proxy models
@@ -117,157 +117,66 @@ allowed_file_types = .pdf,.txt,.docx,.md
 
 ## Usage
 
-## 🚀 Quick Start
-
-### Installation
-
-1. **Clone the repository**
+1. **Start the application**
    ```bash
-   git clone https://github.com/solarisjon/creatercav4.git
-   cd creatercav4
-   ```
-
-2. **Install dependencies**
-   ```bash
-   # Production dependencies
-   make install
+   python main.py
    
-   # Or for development (includes testing tools)
-   make dev-install
+   # Or with custom settings
+   python main.py --port 9000 --debug
    ```
 
-3. **Configure the application**
-   ```bash
-   cp config.ini.example config.ini
-   # Edit config.ini with your API keys and settings
-   ```
+2. **Open your browser** to `http://localhost:8090`
 
-### Running the Application
-
-```bash
-# Quick start
-make run
-
-# Development mode with debug
-make dev
-
-# Or directly with Python
-python main.py
-python main.py --debug
-```
-
-## 🛠️ Development Commands
-
-### Available Commands (Makefile)
-
-```bash
-make help           # Show all available commands
-make test           # Run all tests
-make test-unit      # Run unit tests only
-make test-integration # Run integration tests only
-make test-e2e       # Run end-to-end tests only
-make test-coverage  # Run tests with coverage report
-make lint           # Run code linting
-make format         # Format code with black
-make clean          # Clean up generated files
-make run            # Run the application
-make dev            # Run in development mode
-make deploy         # Deploy the application
-```
-
-## 🏗️ Project Structure
-
-```
-creatercav4/
-├── src/                        # All source code
-│   ├── core/                   # Core business logic
-│   │   ├── analysis/           # Analysis engine and parsers
-│   │   ├── data/               # Data collectors and processors
-│   │   └── llm/                # LLM clients and providers
-│   ├── integrations/           # External integrations
-│   │   ├── jira/               # Jira integration
-│   │   └── mcp/                # MCP server integrations
-│   ├── models/                 # Data models and schemas
-│   ├── prompts/                # Prompt templates and contexts
-│   │   ├── contexts/           # Context files for different scenarios
-│   │   ├── schemas/            # JSON schemas for validation
-│   │   └── templates/          # Prompt templates
-│   ├── scripts/                # Deployment and utility scripts
-│   ├── ui/                     # User interface components
-│   │   ├── components/         # Reusable UI components
-│   │   ├── static/             # CSS, JS, images
-│   │   └── utils/              # UI utilities
-│   └── utils/                  # General utilities
-├── test/                       # All tests organized by type
-│   ├── unit/                   # Unit tests
-│   ├── integration/            # Integration tests
-│   ├── e2e/                    # End-to-end tests
-│   └── debug/                  # Debug and troubleshooting tests
-├── docs/                       # Documentation
-├── config/                     # Configuration files
-├── logs/                       # Application logs
-├── output/                     # Generated reports
-└── uploads/                    # User uploaded files
-```
-
-## 🧪 Testing
-
-### Running Tests
-
-```bash
-# Run all tests
-make test
-
-# Run specific test categories
-make test-unit
-make test-integration
-make test-e2e
-
-# Generate coverage report
-make test-coverage
-
-# Run specific test file
-## 📖 Usage
-
-1. **Start the application**: `make run` or `python main.py`
-2. **Open browser**: Navigate to `http://localhost:8090`
 3. **Upload source materials**:
    - PDF files (support cases, documentation)
    - Add web URLs (Confluence pages, documentation)
-   - Reference Jira tickets for context
-4. **Select analysis type**:
-   - Formal RCA Report
-   - Initial Analysis
-   - Kepner-Tregoe Analysis
-5. **Generate analysis**: Click "Generate Analysis" for comprehensive RCA
+   - Reference Jira tickets for context (read-only)
 
-## 🔧 Features
+4. **Describe the issue** requiring root cause analysis
 
-### Analysis Types
-- **Formal RCA Report**: Comprehensive root cause analysis with structured sections
-- **Initial Analysis**: Quick preliminary analysis for immediate insights
-- **Kepner-Tregoe Analysis**: Structured problem-solving methodology with decision tables
+5. **Generate RCA report** - the system will:
+   - Process all uploaded files and URLs
+   - Read and analyze referenced Jira tickets for context
+   - Generate comprehensive RCA using LLM
+   - Create detailed analysis report
 
-### Data Sources
-- **File Upload**: PDF, TXT, DOCX, MD files
-- **Web URLs**: Confluence pages, documentation sites
-- **Jira Integration**: Reference existing tickets for context
+## Project Structure
 
-### UI Features
-- **NetApp Branding**: Professional NetApp-themed interface
-- **Responsive Design**: Desktop-optimized layout with wide cards
-- **Progress Tracking**: Real-time analysis progress updates
-- **Table Rendering**: Beautiful HTML tables from markdown
-- **File Management**: Secure upload and processing
-
-## ⚙️ Configuration
+```
+creatercav4/
+├── main.py                    # Application entry point
+├── config.ini.example        # Configuration template
+├── src/
+│   ├── app.py                # NiceGUI web application
+│   ├── config.py             # Configuration management
+│   ├── mcp_client.py         # MCP protocol client
+│   ├── rca_generator.py      # RCA analysis engine
+│   └── utils/
+│       ├── logger.py         # Logging utilities
+│       └── file_handler.py   # Secure file operations
+├── tests/                     # Comprehensive unit tests
+│   ├── conftest.py           # Test fixtures and configuration
+│   ├── test_config.py        # Configuration tests
+│   ├── test_file_handler.py  # File handling tests
+│   ├── test_mcp_client.py    # MCP client tests
+│   └── test_rca_generator.py # RCA generation tests
+├── uploads/                   # Secure file upload directory
+├── output/                    # Generated RCA reports
+└── logs/                      # Application logs
 ```
 
-### Test Organization
-- **Unit Tests** (`test/unit/`): Individual component testing
-- **Integration Tests** (`test/integration/`): Component interaction testing  
-- **E2E Tests** (`test/e2e/`): Full application flow testing
-- **Debug Tests** (`test/debug/`): Troubleshooting utilities
+## Development
+
+### Running Tests
+
+The project includes comprehensive unit tests:
+
+```bash
+# Run all tests
+pytest
+
+# Run with coverage report
+pytest --cov=src --cov-report=html
 
 # Run specific test file
 pytest tests/test_config.py
@@ -509,96 +418,12 @@ Application logs are stored in `logs/app.log` with configurable rotation.
 
 ## Support
 
-## 🛠️ Troubleshooting
-
-### Common Issues
-
-1. **Jira Authentication Errors**
-   ```bash
-   # Test Jira connectivity
-   python -c "
-   import asyncio, sys
-   sys.path.insert(0, './src')
-   from mcp_client import mcp_client
-   
-   async def test():
-       await mcp_client.initialize()
-       tickets = await mcp_client.search_jira_tickets('project = YOUR_PROJECT ORDER BY created DESC', max_results=1)
-       print(f'✅ Found {len(tickets)} tickets')
-   
-   asyncio.run(test())
-   "
-   ```
-
-2. **Port Issues**
-   ```bash
-   # Kill existing process
-   lsof -ti:8090 | xargs kill -9
-   
-   # Or use different port
-   python main.py --port 9000
-   ```
-
-3. **Test Failures**
-   ```bash
-   # Check test environment
-   make test-unit
-   
-   # Run with verbose output
-   pytest test/ -v
-   ```
-
-### Debug Mode
-```bash
-# Enable debug logging
-python main.py --debug
-
-# Check logs
-tail -f logs/app.log
-```
-
-## 🤝 Contributing
-
-1. Fork the repository
-2. Create a feature branch: `git checkout -b feature/new-feature`
-3. Make changes and add tests
-4. Run the test suite: `make test`
-5. Check code quality: `make lint`
-6. Format code: `make format`
-7. Commit changes: `git commit -m "Add new feature"`
-8. Push to branch: `git push origin feature/new-feature`
-9. Submit a pull request
-
-### Development Standards
-- Follow existing code patterns
-- Add comprehensive tests for new features
-- Update documentation as needed
-- Maintain >80% test coverage
-- Use type hints consistently
-
-## 📚 Documentation
-
-- [Codebase Cleanup Guide](docs/CODEBASE_CLEANUP.md) - Organization and best practices
-- [Architecture Documentation](docs/architecture/) - Detailed system design
-- [Deployment Guide](docs/deployment/) - Production deployment instructions
-
-## 📋 Requirements
-
-- Python 3.8+
-- Dependencies listed in `requirements.txt`
-- Development dependencies in `requirements-dev.txt`
-
-## 🏷️ License
-
-[Add your license information here]
-
-## 🆘 Support
-
-- Check the [troubleshooting section](#troubleshooting)
-- Review application logs in `logs/app.log`
-- Run `make test` to verify functionality
+For issues and questions:
+- Check the troubleshooting section
+- Review application logs
+- Run the test suite to verify functionality
 - Create an issue in the repository
 
 ---
 
-**NetApp Internal Tool** - This tool is designed for internal NetApp use with proper access controls and security measures.
+**Note**: This tool is designed for internal use and should be deployed in a secure environment with proper access controls.

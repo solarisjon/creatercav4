@@ -8,6 +8,7 @@ wheels/
 
 # Virtual environments
 .venv
+venv/
 
 # Configuration files with secrets
 config.ini
@@ -16,6 +17,24 @@ config.ini
 uploads/
 output/
 logs/
+
+# Test coverage and reports
+htmlcov/
+.coverage
+.pytest_cache/
+
+# Development tools
+.mypy_cache/
+.black-cache/
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# macOS
+.DS_Store
 
 # Temporary files
 *.tmp

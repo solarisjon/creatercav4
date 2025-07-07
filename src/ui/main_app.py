@@ -10,12 +10,20 @@ from nicegui import ui
 from src.utils.logger import setup_logger
 from src.utils.file_handler import FileHandler
 from src.config import config
-from src.mcp_client import mcp_client  # Use existing MCP client for now
+
+# Setup logging first
+logger = setup_logger(__name__)
+
+# Try to import the main MCP client, fall back to simple client if it fails
+try:
+    from src.mcp_client import mcp_client
+    logger.info("Main MCP client imported successfully")
+except ImportError as e:
+    logger.warning(f"Main MCP client failed to import: {e}. Using simple fallback.")
+    from src.mcp_client_simple import simple_mcp_client as mcp_client
+
 from src.core.analysis.rca_engine import RCAEngine
 from src.ui.components.analysis_display import AnalysisDisplay
-
-# Setup logging
-logger = setup_logger(__name__)
 
 class RCAApp:
     """Main RCA Application with clean architecture"""
@@ -51,6 +59,19 @@ class RCAApp:
         self.analysis_status = None  # Track analysis status for UI updates
         self.analysis_error = None   # Track analysis errors for UI updates
         
+        # Progress tracking
+        self.progress_steps = [
+            "Initializing analysis...",
+            "Loading prompt and context...", 
+            "Processing uploaded files...",
+            "Fetching URL content...",
+            "Retrieving Jira tickets...",
+            "Generating LLM analysis...",
+            "Parsing response...",
+            "Finalizing report..."
+        ]
+        self.current_step = 0
+        
         # Jira fetch state
         self._jira_fetch_status = None
         self._jira_main_ticket = None
@@ -65,20 +86,43 @@ class RCAApp:
         self.results_container = None
         self.analysis_display = None
         self.progress_bar = None
+        self.progress_label = None
+        self.progress_container = None
         self.status_timer = None  # Timer to check analysis status
         
     def setup_ui(self):
-        """Setup the user interface"""
-        ui.page_title("RCA Analysis Tool")
+        """Setup the user interface with NetApp branding"""
+        ui.page_title("NetApp RCA Analysis Tool")
         
-        with ui.column().classes('w-full max-w-6xl mx-auto p-4'):
-            # Header
-            ui.label('Root Cause Analysis Tool').classes('text-2xl font-bold mb-4')
-            ui.markdown('Upload files, add URLs or Jira tickets, then generate your analysis.')
-            
-            # Progress bar (initially hidden)
-            self.progress_bar = ui.linear_progress(value=0).classes('w-full mb-4')
-            self.progress_bar.visible = False
+        # Add custom CSS and JavaScript
+        ui.add_head_html('''
+            <link href="https://fonts.googleapis.com/css2?family=Source+Sans+Pro:wght@300;400;600;700&display=swap" rel="stylesheet">
+            <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+            <link rel="stylesheet" href="/static/netapp_styles.css">
+            <script>
+                function removeFile(index) {
+                    // Trigger file removal - this will be handled by the Python backend
+                    window.dispatchEvent(new CustomEvent('removeFile', {detail: {index: index}}));
+                }
+                function removeUrl(index) {
+                    window.dispatchEvent(new CustomEvent('removeUrl', {detail: {index: index}}));
+                }
+                function removeTicket(index) {
+                    window.dispatchEvent(new CustomEvent('removeTicket', {detail: {index: index}}));
+                }
+            </script>
+        ''')
+        
+        # NetApp Header
+        with ui.row().classes('w-full netapp-header'):
+            with ui.row().classes('w-full max-w-6xl mx-auto px-4').style('align-items: center'):
+                ui.html('<img src="/static/netapp_logo.png" class="netapp-logo" alt="NetApp Logo">')
+                with ui.column().classes('flex-grow'):
+                    ui.html('<h1 class="netapp-title">Root Cause Analysis Tool</h1>')
+                    ui.html('<p class="netapp-subtitle">Intelligent analysis for faster problem resolution</p>')
+        
+        # Main content area - single column with wide cards
+        with ui.column().classes('w-full p-6 netapp-fade-in').style('max-width: 80%; margin: 0 auto;'):
             
             # File upload section
             self._create_upload_section()
@@ -95,77 +139,90 @@ class RCAApp:
             # Control buttons
             self._create_control_section()
             
-            # Results section
-            self._create_results_section()
+            # Progress section (initially hidden) - moved below controls
+            with ui.card().classes('netapp-card').style('max-width: 80%; margin: 0 auto; width: 100%;') as self.progress_container:
+                self.progress_container.visible = False
+                with ui.column().classes('netapp-card-content w-full'):
+                    ui.html('<div class="netapp-card-header">Analysis Progress</div>')
+                    self.progress_label = ui.label('Ready to start analysis...').classes('text-sm mb-2 self-start')
+                    self.progress_bar = ui.linear_progress(value=0).classes('w-full netapp-progress').style('max-width: 600px;')
+        
+        # Results section - full width
+        self._create_results_section()
     
     def _create_upload_section(self):
-        """Create file upload section"""
-        with ui.card().classes('w-full mb-4'):
-            ui.label('File Upload').classes('text-lg font-semibold mb-2')
-            ui.upload(
-                on_upload=self.handle_file_upload,
-                multiple=True,
-                max_file_size=50 * 1024 * 1024  # 50MB
-            ).classes('w-full')
-            
-            # Display uploaded files
-            ui.label('Uploaded Files:').classes('text-sm font-medium mt-2')
-            self.files_list = ui.column().classes('w-full')
+        """Create file upload section with NetApp styling"""
+        with ui.card().classes('netapp-card').style('max-width: 80%; margin: 0 auto; width: 100%;'):
+            ui.html('<div class="netapp-card-header"><i class="material-icons netapp-icon-file" style="vertical-align: middle; margin-right: 8px;">attach_file</i>File Upload</div>')
+            with ui.column().classes('netapp-card-content w-full'):
+                ui.upload(
+                    on_upload=self.handle_file_upload,
+                    multiple=True,
+                    max_file_size=50 * 1024 * 1024  # 50MB
+                ).classes('w-full').style('border: 2px dashed var(--netapp-blue); border-radius: 8px; padding: 1rem; width: 100%;')
+                
+                # Display uploaded files
+                ui.label('Uploaded Files:').classes('text-sm font-medium mt-3 mb-2 self-start')
+                self.files_list = ui.column().classes('w-full')
     
     def _create_url_section(self):
-        """Create URL input section"""
-        with ui.card().classes('w-full mb-4'):
-            ui.label('URLs').classes('text-lg font-semibold mb-2')
-            with ui.row().classes('w-full'):
-                self.url_input = ui.input('Enter URL').classes('flex-grow')
-                ui.button('Add URL', on_click=self.add_url).classes('ml-2')
-            
-            # Display added URLs
-            ui.label('Added URLs:').classes('text-sm font-medium mt-2')
-            self.urls_list = ui.column().classes('w-full')
+        """Create URL input section with NetApp styling"""
+        with ui.card().classes('netapp-card').style('max-width: 80%; margin: 0 auto; width: 100%;'):
+            ui.html('<div class="netapp-card-header"><i class="material-icons netapp-icon-link" style="vertical-align: middle; margin-right: 8px;">link</i>URL Sources</div>')
+            with ui.column().classes('netapp-card-content w-full'):
+                with ui.row().classes('w-full gap-2 justify-center'):
+                    self.url_input = ui.input('Enter URL').classes('flex-grow netapp-input').style('min-width: 300px;')
+                    ui.button('Add URL', on_click=self.add_url).classes('netapp-btn-primary')
+                
+                # Display added URLs
+                ui.label('Added URLs:').classes('text-sm font-medium mt-3 mb-2 self-start')
+                self.urls_list = ui.column().classes('w-full')
     
     def _create_jira_section(self):
-        """Create Jira ticket section"""
-        with ui.card().classes('w-full mb-4'):
-            ui.label('Jira Tickets').classes('text-lg font-semibold mb-2')
-            with ui.row().classes('w-full'):
-                self.ticket_input = ui.input('Enter Jira Ticket ID').classes('flex-grow')
-                ui.button('Add Ticket', on_click=self.add_jira_ticket_sync).classes('ml-2')
-            
-            # Display added tickets
-            ui.label('Added Tickets:').classes('text-sm font-medium mt-2')
-            self.tickets_list = ui.column().classes('w-full')
+        """Create Jira ticket section with NetApp styling"""
+        with ui.card().classes('netapp-card').style('max-width: 80%; margin: 0 auto; width: 100%;'):
+            ui.html('<div class="netapp-card-header"><i class="material-icons netapp-icon-ticket" style="vertical-align: middle; margin-right: 8px;">confirmation_number</i>Jira Integration</div>')
+            with ui.column().classes('netapp-card-content w-full'):
+                with ui.row().classes('w-full gap-2 justify-center'):
+                    self.ticket_input = ui.input('Enter Jira Ticket ID').classes('flex-grow netapp-input').style('min-width: 300px;')
+                    ui.button('Add Ticket', on_click=self.add_jira_ticket_sync).classes('netapp-btn-primary')
+                
+                # Display added tickets
+                ui.label('Added Tickets:').classes('text-sm font-medium mt-3 mb-2 self-start')
+                self.tickets_list = ui.column().classes('w-full')
     
     def _create_analysis_section(self):
-        """Create analysis configuration section"""
-        with ui.card().classes('w-full mb-4'):
-            ui.label('Analysis Configuration').classes('text-lg font-semibold mb-2')
-            
-            # Prompt selection
-            self.prompt_select = ui.select(
-                self.PROMPT_OPTIONS,
-                value=self.selected_prompt,
-                on_change=self.on_prompt_select
-            ).classes('w-full mb-2')
+        """Create analysis configuration section with NetApp styling"""
+        with ui.card().classes('netapp-card').style('max-width: 80%; margin: 0 auto; width: 100%;'):
+            ui.html('<div class="netapp-card-header"><i class="material-icons" style="vertical-align: middle; margin-right: 8px;">settings</i>Analysis Configuration</div>')
+            with ui.column().classes('netapp-card-content w-full'):
+                # Prompt selection
+                ui.label('Analysis Type:').classes('text-sm font-medium mb-2 self-start')
+                self.prompt_select = ui.select(
+                    self.PROMPT_OPTIONS,
+                    value=self.selected_prompt,
+                    on_change=self.on_prompt_select
+                ).classes('w-full netapp-input').style('max-width: 400px;')
     
     def _create_control_section(self):
-        """Create control buttons section"""
-        with ui.row().classes('w-full gap-2 mb-4'):
+        """Create control buttons section with NetApp styling"""
+        with ui.row().classes('w-full gap-3 mb-4 justify-center'):
             ui.button(
                 'Generate Analysis', 
                 on_click=self.start_analysis
-            ).classes('bg-blue-600 text-white px-6 py-2')
+            ).classes('netapp-btn-orange').style('min-width: 200px; font-size: 1.1rem;')
             
             ui.button(
                 'Clear All', 
                 on_click=self.clear_all
-            ).classes('bg-gray-600 text-white px-6 py-2')
+            ).classes('netapp-btn-secondary').style('min-width: 120px;')
     
     def _create_results_section(self):
-        """Create results display section"""
-        with ui.card().classes('w-full'):
-            ui.label('Analysis Results').classes('text-lg font-semibold mb-2')
-            self.results_container = ui.column().classes('w-full')
+        """Create results display section with NetApp styling - full width"""
+        with ui.column().classes('w-full px-4 py-6'):
+            with ui.card().classes('netapp-card netapp-results w-full'):
+                ui.html('<div class="netapp-card-header"><i class="material-icons" style="vertical-align: middle; margin-right: 8px;">analytics</i>Analysis Results</div>')
+                self.results_container = ui.column().classes('netapp-card-content w-full')
     
     def handle_file_upload(self, e):
         """Handle file upload"""
@@ -178,14 +235,14 @@ class RCAApp:
             if file_path:
                 self.uploaded_files.append(str(file_path))
                 self.update_files_display()
-                ui.notify(f'File uploaded: {e.name}', type='positive')
+                ui.notify(f'File uploaded: {e.name}', type='positive', color='var(--netapp-success)')
                 logger.info(f"File uploaded successfully: {file_path}")
             else:
-                ui.notify(f'Failed to upload file: {e.name}', type='negative')
+                ui.notify(f'Failed to upload file: {e.name}', type='negative', color='var(--netapp-danger)')
                 logger.error(f"Failed to upload file: {e.name}")
                 
         except Exception as ex:
-            ui.notify(f'Error uploading file: {str(ex)}', type='negative')
+            ui.notify(f'Error uploading file: {str(ex)}', type='negative', color='var(--netapp-danger)')
             logger.error(f"Error uploading file {e.name}: {ex}")
     
     def add_url(self):
@@ -195,12 +252,12 @@ class RCAApp:
             if url not in self.urls:
                 self.urls.append(url)
                 self.update_urls_display()
-                ui.notify(f'URL added: {url}', type='positive')
+                ui.notify(f'URL added: {url}', type='positive', color='var(--netapp-success)')
             else:
-                ui.notify('URL already added', type='warning')
+                ui.notify('URL already added', type='warning', color='var(--netapp-warning)')
             self.url_input.value = ''
         else:
-            ui.notify('Please enter a valid URL', type='negative')
+            ui.notify('Please enter a valid URL', type='negative', color='var(--netapp-danger)')
     
     def add_jira_ticket_sync(self):
         """Add Jira ticket to list with linked issues dialog"""
@@ -346,35 +403,39 @@ class RCAApp:
         dialog.open()
 
     def update_files_display(self):
-        """Update the files display"""
+        """Update the files display with NetApp styling"""
         self.files_list.clear()
         for i, file_path in enumerate(self.uploaded_files):
             file_name = Path(file_path).name
             with self.files_list:
-                with ui.row().classes('w-full items-center'):
-                    ui.icon('attach_file').classes('text-blue-600')
-                    ui.label(file_name).classes('flex-grow')
-                    ui.button(icon='delete', on_click=lambda idx=i: self.remove_file(idx)).classes('text-red-600')
+                with ui.row().classes('netapp-file-item netapp-slide-up'):
+                    with ui.row().style('align-items: center; flex-grow: 1;'):
+                        ui.icon('attach_file').classes('netapp-icon-file mr-2')
+                        ui.label(file_name).style('font-weight: 500;')
+                    ui.button(icon='delete', on_click=lambda idx=i: self.remove_file(idx)).classes('netapp-icon-delete').style('background: none; border: none; padding: 4px;')
     
     def update_urls_display(self):
-        """Update the URLs display"""
+        """Update the URLs display with NetApp styling"""
         self.urls_list.clear()
         for i, url in enumerate(self.urls):
+            display_url = url[:50] + '...' if len(url) > 50 else url
             with self.urls_list:
-                with ui.row().classes('w-full items-center'):
-                    ui.icon('link').classes('text-green-600')
-                    ui.label(url).classes('flex-grow')
-                    ui.button(icon='delete', on_click=lambda idx=i: self.remove_url(idx)).classes('text-red-600')
+                with ui.row().classes('netapp-file-item netapp-slide-up'):
+                    with ui.row().style('align-items: center; flex-grow: 1;'):
+                        ui.icon('link').classes('netapp-icon-link mr-2')
+                        ui.label(display_url).style('font-weight: 500;')
+                    ui.button(icon='delete', on_click=lambda idx=i: self.remove_url(idx)).classes('netapp-icon-delete').style('background: none; border: none; padding: 4px;')
     
     def update_tickets_display(self):
-        """Update the Jira tickets display"""
+        """Update the Jira tickets display with NetApp styling"""
         self.tickets_list.clear()
         for i, ticket in enumerate(self.jira_tickets):
             with self.tickets_list:
-                with ui.row().classes('w-full items-center'):
-                    ui.icon('confirmation_number').classes('text-orange-600')
-                    ui.label(ticket).classes('flex-grow')
-                    ui.button(icon='delete', on_click=lambda idx=i: self.remove_ticket(idx)).classes('text-red-600')
+                with ui.row().classes('netapp-file-item netapp-slide-up'):
+                    with ui.row().style('align-items: center; flex-grow: 1;'):
+                        ui.icon('confirmation_number').classes('netapp-icon-ticket mr-2')
+                        ui.label(ticket).style('font-weight: 500;')
+                    ui.button(icon='delete', on_click=lambda idx=i: self.remove_ticket(idx)).classes('netapp-icon-delete').style('background: none; border: none; padding: 4px;')
     
     def remove_file(self, index: int):
         """Remove file from list"""
@@ -403,50 +464,95 @@ class RCAApp:
         logger.info(f"Prompt selection changed to: {self.selected_prompt}")
     
     def start_analysis(self):
-        """Start analysis (synchronous wrapper)"""
+        """Start analysis with enhanced progress tracking"""
         # Validate inputs first in sync context
         if not self.uploaded_files and not self.urls and not self.jira_tickets:
             ui.notify('Please add at least one file, URL, or Jira ticket', type='negative')
             return
 
-        # Reset status
-        self.analysis_status = None
+        # Reset status and progress
+        self.analysis_status = 'running'
         self.analysis_error = None
         self.analysis_result = None
+        self.current_step = 0
 
-        # Show progress immediately
-        self.progress_bar.visible = True
-        self.progress_bar.value = 0.1
+        # Show progress container and initialize
+        self.progress_container.visible = True
+        self.progress_bar.value = 0
+        self.progress_label.text = self.progress_steps[0]
+        
+        # Clear previous results
+        if self.results_container:
+            self.results_container.clear()
+        
         ui.notify('Starting RCA analysis...', type='info')
         
         # Start the async analysis in background
         asyncio.create_task(self._generate_analysis_async())
         
-        # Start status checking timer
-        self.status_timer = ui.timer(0.5, self._check_analysis_status)
+        # Start status checking timer with progress updates
+        self.status_timer = ui.timer(0.3, self._update_progress_display)
 
-    def _check_analysis_status(self):
-        """Check analysis status and update UI accordingly"""
+    def _update_progress_display(self):
+        """Update progress display with current status and step"""
         if self.analysis_status == 'completed':
             # Analysis completed successfully
             self.progress_bar.value = 1.0
+            self.progress_label.text = "Analysis completed successfully!"
             self.display_results()
             ui.notify('RCA analysis completed successfully!', type='positive')
             self.status_timer.cancel()
-            self.progress_bar.visible = False
+            # Hide progress after a brief delay
+            ui.timer(2.0, lambda: setattr(self.progress_container, 'visible', False), once=True)
             self.analysis_status = None
             
         elif self.analysis_status == 'error':
             # Analysis failed
+            self.progress_bar.value = 0
+            self.progress_label.text = f"Error: {self.analysis_error or 'Unknown error occurred'}"
             ui.notify(f'Error generating analysis: {self.analysis_error}', type='negative')
             self.status_timer.cancel()
-            self.progress_bar.visible = False
+            # Hide progress after delay to show error
+            ui.timer(5.0, lambda: setattr(self.progress_container, 'visible', False), once=True)
             self.analysis_status = None
             self.analysis_error = None
+            
+        elif self.analysis_status == 'running':
+            # Update progress based on current step
+            if self.current_step < len(self.progress_steps):
+                progress_value = (self.current_step + 0.5) / len(self.progress_steps)
+                self.progress_bar.value = min(progress_value, 0.95)  # Cap at 95% until complete
+                self.progress_label.text = self.progress_steps[self.current_step]
 
     async def _generate_analysis_async(self):
-        """Generate RCA analysis (background async method)"""
+        """Generate RCA analysis with progress tracking"""
         try:
+            # Step 1: Initializing
+            self.current_step = 0
+            await asyncio.sleep(0.2)  # Brief pause to show step
+            
+            # Step 2: Loading prompt and context
+            self.current_step = 1
+            await asyncio.sleep(0.3)
+            
+            # Step 3: Processing files (if any)
+            if self.uploaded_files:
+                self.current_step = 2
+                await asyncio.sleep(0.4)
+            
+            # Step 4: Fetching URLs (if any) 
+            if self.urls:
+                self.current_step = 3
+                await asyncio.sleep(0.4)
+            
+            # Step 5: Retrieving Jira tickets (if any)
+            if self.jira_tickets:
+                self.current_step = 4
+                await asyncio.sleep(0.4)
+            
+            # Step 6: Generating LLM analysis
+            self.current_step = 5
+            
             # Use the new RCA engine
             result = await self.rca_engine.generate_analysis(
                 files=self.uploaded_files,
@@ -456,8 +562,16 @@ class RCAApp:
                 issue_description=""
             )
             
+            # Step 7: Parsing response
+            self.current_step = 6
+            await asyncio.sleep(0.2)
+            
             # Store the prompt file used for this analysis
             result['prompt_file_used'] = self.selected_prompt
+            
+            # Step 8: Finalizing
+            self.current_step = 7
+            await asyncio.sleep(0.2)
             
             # Update results and status
             self.analysis_result = result
@@ -469,8 +583,6 @@ class RCAApp:
             self.analysis_status = 'error'
             logger.error(f"Error generating analysis: {e}")
 
-    # ...existing code...
-    
     def display_results(self):
         """Display analysis results using the new display component"""
         if not self.analysis_result:
@@ -486,8 +598,16 @@ class RCAApp:
             # Display the analysis using the new component
             self.analysis_display.display_analysis(self.analysis_result)
     
+    def _advance_progress_step(self, step_name: str = None):
+        """Advance to the next progress step"""
+        if self.current_step < len(self.progress_steps) - 1:
+            self.current_step += 1
+        if step_name:
+            # Override the default step message with a custom one
+            self.progress_label.text = step_name
+
     def clear_all(self):
-        """Clear all inputs and results"""
+        """Clear all uploaded data and reset UI"""
         self.uploaded_files.clear()
         self.urls.clear()
         self.jira_tickets.clear()

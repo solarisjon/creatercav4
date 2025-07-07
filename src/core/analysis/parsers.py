@@ -135,29 +135,127 @@ class ResponseParser:
         """Parse formal RCA sections from structured text response"""
         sections = {}
         
-        # Common section patterns for formal RCA
+        # Enhanced section patterns for formal RCA based on the actual prompt structure
         section_patterns = {
-            'timeline': r'(?:^|\n)(?:--|SECTION 1|A\.|Timeline).*?Timeline\s*(.*?)(?=(?:^|\n)(?:--|SECTION|B\.|[A-Z]\.|###)|$)',
-            'customer_impact': r'(?:^|\n)(?:--|SECTION 2|B\.|Customer Impact).*?(?:Customer Impact|Impact)\s*(.*?)(?=(?:^|\n)(?:--|SECTION|C\.|[A-Z]\.|###)|$)',
-            'technical_summary': r'(?:^|\n)(?:--|SECTION 3|C\.|Technical Summary).*?(?:Technical Summary|Summary)\s*(.*?)(?=(?:^|\n)(?:--|SECTION|D\.|[A-Z]\.|###)|$)',
-            'root_cause': r'(?:^|\n)(?:--|SECTION 4|D\.|Root Cause).*?(?:Root Cause|Cause)\s*(.*?)(?=(?:^|\n)(?:--|SECTION|E\.|[A-Z]\.|###)|$)',
-            'next_steps': r'(?:^|\n)(?:--|SECTION 5|E\.|Next Steps).*?(?:Next Steps|Steps)\s*(.*?)(?=(?:^|\n)(?:--|SECTION|F\.|[A-Z]\.|###)|$)',
-            'prevention': r'(?:^|\n)(?:--|SECTION 6|F\.|Prevention).*?(?:Prevention|Preventive)\s*(.*?)(?=(?:^|\n)(?:--|SECTION|G\.|[A-Z]\.|###)|$)',
-            'escalation': r'(?:^|\n)(?:--|SECTION 7|G\.|Escalation).*?(?:Escalation|Escalated)\s*(.*?)(?=(?:^|\n)(?:--|SECTION|H\.|[A-Z]\.|###)|$)'
+            # Executive Summary - can be at start or in section I
+            'executive_summary': r'(?:^|\n)(?:### C\.\s*Executive Summary|(?:^|\n)Executive Summary)\s*(.*?)(?=(?:^|\n)(?:##|###)|$)',
+            
+            # Timeline from section I.A
+            'timeline': r'(?:^|\n)### A\.\s*Timeline\s*(.*?)(?=(?:^|\n)###|$)',
+            
+            # Case Information from section I.B  
+            'case_information': r'(?:^|\n)### B\.\s*Case Information\s*(.*?)(?=(?:^|\n)###|$)',
+            
+            # Problem Summary from section II.A
+            'problem_summary': r'(?:^|\n)### A\.\s*Problem Summary\s*(.*?)(?=(?:^|\n)###|$)',
+            
+            # Technical Analysis - section II
+            'technical_analysis': r'(?:^|\n)##\s*II\.\s*TECHNICAL ANALYSIS\s*(.*?)(?=(?:^|\n)##|$)',
+            
+            # Impact Assessment from section II.B
+            'impact_assessment': r'(?:^|\n)### B\.\s*Impact Assessment\s*(.*?)(?=(?:^|\n)###|$)',
+            
+            # Root Cause Analysis from section II.C
+            'root_cause': r'(?:^|\n)### C\.\s*Root Cause Analysis\s*(.*?)(?=(?:^|\n)###|$)',
+            
+            # Risk Assessment - section III
+            'risk_assessment': r'(?:^|\n)##\s*III\.\s*RISK ASSESSMENT\s*(.*?)(?=(?:^|\n)##|$)',
+            
+            # Likelihood from section III.A
+            'likelihood_of_occurrence': r'(?:^|\n)### A\.\s*Likelihood of Occurrence\s*(.*?)(?=(?:^|\n)###|$)',
+            
+            # Vulnerability from section III.B
+            'vulnerability_assessment': r'(?:^|\n)### B\.\s*Vulnerability in Existing Environment\s*(.*?)(?=(?:^|\n)###|$)',
+            
+            # Risk Profile from section III.C
+            'risk_profile': r'(?:^|\n)### C\.\s*Overall Risk Profile\s*(.*?)(?=(?:^|\n)###|$)',
+            
+            # Mitigation - section IV
+            'mitigation_resolution': r'(?:^|\n)##\s*IV\.\s*MITIGATION AND RESOLUTION\s*(.*?)(?=(?:^|\n)##|$)',
+            
+            # Workaround from section IV.A
+            'workaround_solutions': r'(?:^|\n)### A\.\s*Workaround Solutions\s*(.*?)(?=(?:^|\n)###|$)',
+            
+            # Known Defect from section IV.B
+            'defect_resolution': r'(?:^|\n)### B\.\s*Known Defect Resolution\s*(.*?)(?=(?:^|\n)###|$)',
+            
+            # New Defect from section IV.C
+            'new_defect_management': r'(?:^|\n)### C\.\s*New Defect Management\s*(.*?)(?=(?:^|\n)###|$)',
+            
+            # Recommended Changes from section IV.D
+            'recommended_changes': r'(?:^|\n)### D\.\s*Recommended System/Environmental Changes\s*(.*?)(?=(?:^|\n)###|$)',
+            
+            # Prevention Strategy - section V
+            'prevention': r'(?:^|\n)##\s*V\.\s*PREVENTION STRATEGY\s*(.*?)(?=(?:^|\n)##|$)',
+            
+            # Current Prevention from section V.A
+            'current_prevention': r'(?:^|\n)### A\.\s*Current Environment Prevention\s*(.*?)(?=(?:^|\n)###|$)',
+            
+            # Future Prevention from section V.B
+            'future_prevention': r'(?:^|\n)### B\.\s*Future Prevention Initiatives\s*(.*?)(?=(?:^|\n)###|$)',
+            
+            # Monitoring from section V.C
+            'monitoring_detection': r'(?:^|\n)### C\.\s*Monitoring and Detection\s*(.*?)(?=(?:^|\n)###|$)',
+            
+            # Fallback patterns for common sections
+            'customer_impact': r'(?:^|\n)(?:###?\s*)?(?:Customer Impact|Impact)\s*(.*?)(?=(?:^|\n)(?:##|###)|$)',
+            'technical_summary': r'(?:^|\n)(?:###?\s*)?(?:Technical Summary|Summary)\s*(.*?)(?=(?:^|\n)(?:##|###)|$)',
+            'next_steps': r'(?:^|\n)(?:###?\s*)?(?:Next Steps|Steps)\s*(.*?)(?=(?:^|\n)(?:##|###)|$)',
+            'escalation': r'(?:^|\n)(?:###?\s*)?(?:Escalation|Escalated)\s*(.*?)(?=(?:^|\n)(?:##|###)|$)'
         }
         
         for section_name, pattern in section_patterns.items():
             match = re.search(pattern, response_text, re.DOTALL | re.IGNORECASE | re.MULTILINE)
             if match:
                 content = match.group(1).strip()
-                if content:
+                if content and len(content) > 10:  # Only include substantial content
                     sections[section_name] = content
-                    logger.debug(f"Extracted formal RCA section: {section_name}")
+                    logger.debug(f"Extracted formal RCA section: {section_name} ({len(content)} chars)")
         
-        # If no sections found, put everything in executive_summary
+        # If very few sections found, try to extract by Roman numerals and letters
+        if len(sections) < 3:
+            logger.info("Few sections found, trying broader extraction patterns")
+            broader_sections = self._extract_by_headers(response_text)
+            sections.update(broader_sections)
+        
+        # If still no sections found, put everything in executive_summary
         if not sections:
             sections['executive_summary'] = response_text.strip()
+            logger.warning("No structured sections found, using full response as executive summary")
             
+        logger.info(f"Formal RCA parsing extracted {len(sections)} sections: {list(sections.keys())}")
+        return sections
+
+    def _extract_by_headers(self, response_text: str) -> Dict[str, str]:
+        """Extract content by looking for common header patterns"""
+        sections = {}
+        
+        # Split by major headers (## patterns)
+        major_sections = re.split(r'\n## ', response_text)
+        
+        for i, section in enumerate(major_sections):
+            if i == 0:
+                continue  # Skip content before first header
+                
+            lines = section.split('\n')
+            if not lines:
+                continue
+                
+            header = lines[0].strip()
+            content = '\n'.join(lines[1:]).strip()
+            
+            # Map headers to section keys
+            if 'INCIDENT' in header.upper() or 'OVERVIEW' in header.upper():
+                sections['incident_overview'] = content
+            elif 'TECHNICAL' in header.upper() and 'ANALYSIS' in header.upper():
+                sections['technical_analysis'] = content
+            elif 'RISK' in header.upper():
+                sections['risk_assessment'] = content
+            elif 'MITIGATION' in header.upper() or 'RESOLUTION' in header.upper():
+                sections['mitigation_resolution'] = content
+            elif 'PREVENTION' in header.upper():
+                sections['prevention'] = content
+        
         return sections
 
     def _parse_initial_analysis_sections(self, response_text: str) -> Dict[str, str]:

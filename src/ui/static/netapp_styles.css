@@ -1,0 +1,404 @@
+/* NetApp RCA Tool Custom Styling */
+
+:root {
+    /* NetApp Brand Colors */
+    --netapp-blue: #0067C5;
+    --netapp-navy: #003C71;
+    --netapp-light-blue: #4A9EE7;
+    --netapp-orange: #F05A28;
+    --netapp-dark-orange: #D4481F;
+    --netapp-gray-100: #F8F9FA;
+    --netapp-gray-200: #E9ECEF;
+    --netapp-gray-300: #DEE2E6;
+    --netapp-gray-600: #6C757D;
+    --netapp-gray-800: #343A40;
+    --netapp-gray-900: #212529;
+    --netapp-white: #FFFFFF;
+    --netapp-success: #28A745;
+    --netapp-warning: #FFC107;
+    --netapp-danger: #DC3545;
+}
+
+/* Global Styling */
+body {
+    font-family: 'Source Sans Pro', 'Helvetica Neue', Arial, sans-serif;
+    background: linear-gradient(135deg, var(--netapp-gray-100) 0%, var(--netapp-white) 100%);
+    color: var(--netapp-gray-800);
+    line-height: 1.6;
+    margin: 0;
+    padding: 0;
+}
+
+/* Ensure full width for analysis results */
+.full-width-results {
+    width: 100vw !important;
+    max-width: none !important;
+    margin-left: calc(-50vw + 50%) !important;
+}
+
+/* Desktop-optimized table styling */
+.table-responsive {
+    overflow-x: auto;
+    margin: 1rem 0;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+/* Desktop layout utilities */
+.desktop-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1.5rem;
+    width: 100%;
+}
+
+.desktop-wide {
+    grid-column: 1 / -1;
+}
+
+/* Enhanced results section for desktop */
+.netapp-results {
+    background: var(--netapp-white);
+    border-radius: 12px;
+    border: 1px solid var(--netapp-gray-200);
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+    max-width: none !important;
+    width: 100% !important;
+    margin: 1.5rem 0;
+}
+
+/* Header Styling */
+.netapp-header {
+    background: linear-gradient(135deg, var(--netapp-blue) 0%, var(--netapp-navy) 100%);
+    color: var(--netapp-white);
+    padding: 1.5rem 0;
+    box-shadow: 0 4px 12px rgba(0, 103, 197, 0.2);
+    margin-bottom: 2rem;
+}
+
+.netapp-logo {
+    height: 40px;
+    width: auto;
+    margin-right: 1.5rem;
+    filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.1));
+    background: transparent;
+}
+
+.netapp-title {
+    font-size: 2rem;
+    font-weight: 700;
+    margin: 0;
+    color: var(--netapp-white);
+}
+
+.netapp-subtitle {
+    font-size: 1.1rem;
+    opacity: 0.9;
+    margin-top: 0.5rem;
+    color: var(--netapp-white);
+}
+
+/* Card Styling - Desktop optimized */
+.netapp-card {
+    background: var(--netapp-white);
+    border-radius: 12px;
+    border: 1px solid var(--netapp-gray-200);
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+    margin-bottom: 1.5rem;
+    transition: all 0.3s ease;
+    min-height: 120px;
+}
+
+.netapp-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+}
+
+.netapp-card-header {
+    background: var(--netapp-gray-100);
+    color: var(--netapp-gray-800);
+    padding: 1.2rem 1.5rem;
+    border-bottom: 1px solid var(--netapp-gray-200);
+    border-radius: 12px 12px 0 0;
+    font-weight: 600;
+    font-size: 1.1rem;
+    display: flex;
+    align-items: center;
+}
+
+.netapp-card-content {
+    padding: 1.5rem 2.5rem;
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 100%;
+    max-width: 90%;
+    margin: 0 auto;
+}
+
+/* Ensure form elements and content are properly spaced */
+.netapp-card-content > * {
+    width: 100%;
+    max-width: 100%;
+}
+
+.netapp-card-content .self-start {
+    align-self: flex-start;
+}
+
+.netapp-card-content .justify-center {
+    justify-content: center;
+}
+
+/* Button Styling */
+.netapp-btn-primary {
+    background: linear-gradient(135deg, var(--netapp-blue) 0%, var(--netapp-light-blue) 100%);
+    border: none;
+    color: var(--netapp-white);
+    padding: 0.75rem 1.5rem;
+    border-radius: 8px;
+    font-weight: 600;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 8px rgba(0, 103, 197, 0.3);
+}
+
+.netapp-btn-primary:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(0, 103, 197, 0.4);
+    background: linear-gradient(135deg, var(--netapp-navy) 0%, var(--netapp-blue) 100%);
+}
+
+.netapp-btn-secondary {
+    background: var(--netapp-gray-600);
+    border: none;
+    color: var(--netapp-white);
+    padding: 0.75rem 1.5rem;
+    border-radius: 8px;
+    font-weight: 600;
+    transition: all 0.3s ease;
+}
+
+.netapp-btn-secondary:hover {
+    background: var(--netapp-gray-800);
+    transform: translateY(-1px);
+}
+
+.netapp-btn-orange {
+    background: linear-gradient(135deg, var(--netapp-orange) 0%, var(--netapp-dark-orange) 100%);
+    border: none;
+    color: var(--netapp-white);
+    padding: 0.75rem 1.5rem;
+    border-radius: 8px;
+    font-weight: 600;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 8px rgba(240, 90, 40, 0.3);
+}
+
+.netapp-btn-orange:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(240, 90, 40, 0.4);
+}
+
+/* Progress Bar Styling */
+.netapp-progress {
+    background-color: var(--netapp-gray-200);
+    border-radius: 6px;
+    overflow: hidden;
+    height: 8px;
+}
+
+.netapp-progress-bar {
+    background: linear-gradient(90deg, var(--netapp-blue) 0%, var(--netapp-light-blue) 100%);
+    height: 100%;
+    border-radius: 6px;
+    transition: width 0.3s ease;
+}
+
+/* Input Styling */
+.netapp-input {
+    border: 2px solid var(--netapp-gray-300);
+    border-radius: 8px;
+    padding: 0.75rem;
+    font-size: 1rem;
+    transition: all 0.3s ease;
+    background: var(--netapp-white);
+}
+
+.netapp-input:focus {
+    border-color: var(--netapp-blue);
+    box-shadow: 0 0 0 3px rgba(0, 103, 197, 0.1);
+    outline: none;
+}
+
+/* File List Styling */
+.netapp-file-item {
+    background: var(--netapp-gray-100);
+    border-radius: 8px;
+    padding: 0.75rem;
+    margin-bottom: 0.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border: 1px solid var(--netapp-gray-200);
+    transition: all 0.3s ease;
+}
+
+.netapp-file-item:hover {
+    background: var(--netapp-gray-200);
+}
+
+/* Status Icons */
+.netapp-icon-file {
+    color: var(--netapp-blue);
+}
+
+.netapp-icon-link {
+    color: var(--netapp-success);
+}
+
+.netapp-icon-ticket {
+    color: var(--netapp-orange);
+}
+
+.netapp-icon-delete {
+    color: var(--netapp-danger);
+    cursor: pointer;
+    transition: color 0.3s ease;
+}
+
+.netapp-icon-delete:hover {
+    color: var(--netapp-gray-800);
+}
+
+/* Analysis Results Styling - Desktop optimized */
+.netapp-results {
+    background: var(--netapp-white);
+    border-radius: 12px;
+    border: 1px solid var(--netapp-gray-200);
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+    max-width: none !important;
+    width: 100% !important;
+    margin: 1.5rem 0;
+}
+
+.netapp-results .netapp-card-content {
+    max-width: none !important;
+    width: 100% !important;
+}
+
+.netapp-results h1, .netapp-results h2, .netapp-results h3 {
+    color: var(--netapp-navy);
+}
+
+.netapp-results table {
+    border-collapse: collapse;
+    width: 100%;
+    margin: 1rem 0;
+    border-radius: 8px;
+    overflow: hidden;
+    border: 1px solid var(--netapp-gray-300);
+    table-layout: auto;
+    min-width: 100%;
+}
+
+.netapp-results th {
+    background: var(--netapp-blue);
+    color: var(--netapp-white);
+    padding: 1rem;
+    text-align: left;
+    font-weight: 600;
+    white-space: nowrap;
+    font-size: 0.9rem;
+}
+
+.netapp-results td {
+    padding: 1rem;
+    border-bottom: 1px solid var(--netapp-gray-200);
+    word-wrap: break-word;
+    vertical-align: top;
+    font-size: 0.9rem;
+    line-height: 1.5;
+}
+
+.netapp-results tr:nth-child(even) {
+    background: var(--netapp-gray-100);
+}
+
+.netapp-results tr:hover {
+    background: var(--netapp-gray-200);
+}
+
+/* Toast/Notification Styling */
+.netapp-toast-success {
+    background: var(--netapp-success);
+    color: var(--netapp-white);
+}
+
+.netapp-toast-error {
+    background: var(--netapp-danger);
+    color: var(--netapp-white);
+}
+
+.netapp-toast-warning {
+    background: var(--netapp-warning);
+    color: var(--netapp-gray-900);
+}
+
+.netapp-toast-info {
+    background: var(--netapp-blue);
+    color: var(--netapp-white);
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .netapp-header {
+        padding: 1rem 0;
+    }
+    
+    .netapp-title {
+        font-size: 1.5rem;
+    }
+    
+    .netapp-card-content {
+        padding: 1rem;
+    }
+    
+    .netapp-btn-primary,
+    .netapp-btn-secondary,
+    .netapp-btn-orange {
+        padding: 0.5rem 1rem;
+        font-size: 0.9rem;
+    }
+}
+
+/* Animation Classes */
+.netapp-fade-in {
+    animation: fadeIn 0.5s ease-in-out;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.netapp-slide-up {
+    animation: slideUp 0.3s ease-out;
+}
+
+@keyframes slideUp {
+    from {
+        transform: translateY(20px);
+        opacity: 0;
+    }
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}

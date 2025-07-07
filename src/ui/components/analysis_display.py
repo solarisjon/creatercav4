@@ -14,14 +14,30 @@ class AnalysisDisplay:
     # Mapping of prompt types to their expected sections
     PROMPT_SECTION_MAPS = {
         "formal_rca_prompt": [
+            ("Executive Summary", "executive_summary"),
+            ("Incident Overview", "incident_overview"),
             ("Timeline", "timeline"),
+            ("Case Information", "case_information"),
+            ("Problem Summary", "problem_summary"),
+            ("Technical Analysis", "technical_analysis"),
+            ("Impact Assessment", "impact_assessment"),
+            ("Root Cause Analysis", "root_cause"),
+            ("Risk Assessment", "risk_assessment"),
+            ("Likelihood of Occurrence", "likelihood_of_occurrence"),
+            ("Vulnerability Assessment", "vulnerability_assessment"),
+            ("Overall Risk Profile", "risk_profile"),
+            ("Workaround Solutions", "workaround_solutions"),
+            ("Known Defect Resolution", "defect_resolution"),
+            ("New Defect Management", "new_defect_management"),
+            ("Recommended Changes", "recommended_changes"),
+            ("Prevention Strategy", "prevention"),
+            ("Current Environment Prevention", "current_prevention"),
+            ("Future Prevention", "future_prevention"),
+            ("Monitoring and Detection", "monitoring_detection"),
+            ("Next Steps", "next_steps"),
+            ("Escalation", "escalation"),
             ("Customer Impact", "customer_impact"),
             ("Technical Summary", "technical_summary"),
-            ("Root Cause", "root_cause"),
-            ("Next Steps", "next_steps"),
-            ("Prevention", "prevention"),
-            ("Escalation", "escalation"),
-            ("Executive Summary", "executive_summary"),  # fallback
         ],
         "initial_analysis_prompt": [
             ("CAP Information", "cap_info"),  # will be handled specially
@@ -117,31 +133,36 @@ class AnalysisDisplay:
         return analysis
     
     def _display_sources(self, analysis: Dict[str, Any]):
-        """Display sources used section"""
+        """Display sources used section with wide card format"""
         sources = analysis.get("sources_used", [])
         if sources:
-            with ui.card().classes('w-full mb-4'):
-                ui.label("Sources Used").classes('text-lg font-semibold mb-2')
-                for src in sources:
-                    ui.markdown(f"- {src}")
+            with ui.card().classes('w-full mb-6 netapp-card').style('max-width: 80%; margin: 0 auto;'):
+                with ui.column().classes('netapp-card-content w-full'):
+                    ui.html('<div class="netapp-card-header"><i class="material-icons" style="vertical-align: middle; margin-right: 8px;">source</i>Sources Used</div>')
+                    
+                    # Display sources in a list format
+                    for src in sources:
+                        ui.markdown(f"📄 {src}").classes('text-sm mb-1')
     
     def _display_json_sections(self, analysis: Dict[str, Any], prompt_type: str):
-        """Display sections from JSON structure"""
+        """Display sections from JSON structure in a single column with wide cards"""
         section_mapping = self.PROMPT_SECTION_MAPS.get(prompt_type, [])
         
         if not section_mapping:
             # Dynamic section detection
             section_mapping = self._detect_sections(analysis)
         
+        # Display sections in single column with wide cards
         for header, key in section_mapping:
             value = analysis.get(key)
             if self._should_display_section(value, prompt_type):
-                with ui.card().classes('w-full mb-4'):
-                    ui.label(header).classes('text-lg font-semibold mb-2')
-                    self._render_content(value)
+                with ui.card().classes('w-full mb-4 netapp-card').style('max-width: 80%; margin: 0 auto;'):
+                    with ui.column().classes('netapp-card-content w-full'):
+                        ui.html(f'<div class="netapp-card-header">{header}</div>')
+                        self._render_content(value)
     
     def _display_kt_special_sections(self, analysis: Dict[str, Any]):
-        """Display KT-specific sections that come from raw response parsing"""
+        """Display KT-specific sections in single column with wide cards"""
         kt_special_sections = [
             ("Kepner-Tregoe Problem Analysis", "kepner_tregoe_analysis"),
             ("Problem Specification (IS/IS NOT Analysis)", "is_is_not_table"),
@@ -154,14 +175,15 @@ class AnalysisDisplay:
         for header, key in kt_special_sections:
             value = analysis.get(key)
             if value and str(value).strip():
-                with ui.card().classes('w-full mb-4'):
-                    ui.label(header).classes('text-lg font-semibold mb-2')
-                    
-                    # Special handling for IS/IS NOT table
-                    if key == "is_is_not_table":
-                        self._render_kt_table(value)
-                    else:
-                        self._render_content(value)
+                with ui.card().classes('netapp-card netapp-fade-in w-full mb-6').style('max-width: 80%; margin: 0 auto;'):
+                    with ui.column().classes('netapp-card-content w-full'):
+                        ui.html(f'<div class="netapp-card-header">{header}</div>')
+                        
+                        # Special handling for IS/IS NOT table
+                        if key == "is_is_not_table":
+                            self._render_kt_table(value)
+                        else:
+                            self._render_content(value)
     
     def _render_kt_table(self, table_content: str):
         """Render KT Problem Assessment table with proper HTML formatting"""
@@ -210,27 +232,27 @@ class AnalysisDisplay:
                 continue  # Skip separator lines
             data_lines.append(line)
         
-        # Build HTML table
+        # Build HTML table with NetApp styling and full width
         html_parts = [
-            '<div class="overflow-x-auto">',
-            '<table class="min-w-full bg-white border border-gray-300 rounded-lg shadow-sm">',
-            '<thead class="bg-gray-50">',
+            '<div class="overflow-x-auto w-full">',
+            '<table class="w-full min-w-full bg-white border border-gray-300 rounded-lg shadow-sm netapp-results">',
+            '<thead>',
             '<tr>'
         ]
         
-        # Add headers
+        # Add headers with NetApp styling
         for header in headers:
             # Clean up markdown formatting in headers
             clean_header = header.replace('**', '').replace('*', '')
-            html_parts.append(f'<th class="px-4 py-3 text-left text-sm font-semibold text-gray-900 border-b border-gray-300">{clean_header}</th>')
+            html_parts.append(f'<th class="px-4 py-3 text-left text-sm font-semibold text-white bg-blue-600 border-b border-gray-300">{clean_header}</th>')
         
         html_parts.extend(['</tr>', '</thead>', '<tbody>'])
         
-        # Add data rows
+        # Add data rows with NetApp styling
         for i, line in enumerate(data_lines):
             cells = [cell.strip() for cell in line.split('|') if cell.strip()]
             if len(cells) >= len(headers):  # Only process complete rows
-                row_class = "bg-white" if i % 2 == 0 else "bg-gray-50"
+                row_class = "bg-white hover:bg-gray-100" if i % 2 == 0 else "bg-gray-50 hover:bg-gray-200"
                 html_parts.append(f'<tr class="{row_class}">')
                 
                 for j, cell in enumerate(cells[:len(headers)]):  # Match header count
@@ -239,9 +261,9 @@ class AnalysisDisplay:
                     if not clean_cell:
                         clean_cell = "&nbsp;"
                     
-                    # Style first column differently (dimension labels)
+                    # Style first column differently (dimension labels) with NetApp colors
                     if j == 0:
-                        cell_class = "px-4 py-3 text-sm font-medium text-gray-900 border-b border-gray-200"
+                        cell_class = "px-4 py-3 text-sm font-medium text-gray-900 border-b border-gray-200 bg-blue-50"
                     else:
                         cell_class = "px-4 py-3 text-sm text-gray-700 border-b border-gray-200"
                     
@@ -350,28 +372,30 @@ class AnalysisDisplay:
         if not any(analysis.get(key) for _, key in self.PROMPT_SECTION_MAPS.get(prompt_file, [])):
             raw_response = analysis.get('raw_response', '')
             if raw_response:
-                with ui.card().classes('w-full mb-4'):
-                    ui.label("Analysis Result").classes('text-lg font-semibold mb-2')
-                    self._render_content(raw_response)
+                with ui.card().classes('w-full mb-4 netapp-card').style('max-width: 80%; margin: 0 auto;'):
+                    with ui.column().classes('netapp-card-content w-full'):
+                        ui.html('<div class="netapp-card-header">Analysis Result</div>')
+                        self._render_content(raw_response)
 
     def _display_cap_info(self, analysis: Dict[str, Any]):
         """Display CAP information for initial analysis"""
         cap_fields = ['cap_color', 'cpe_case', 'sap_case', 'customer_name', 'synopsis']
         if any(analysis.get(field) for field in cap_fields):
-            with ui.card().classes('w-full mb-4'):
-                ui.label("CAP Information").classes('text-lg font-semibold mb-2')
-                
-                cap_info = []
-                if analysis.get('cap_color'):
-                    cap_info.append(f"**CAP Color:** {analysis['cap_color']}")
-                if analysis.get('cpe_case'):
-                    cap_info.append(f"**CPE Case:** {analysis['cpe_case']}")
-                if analysis.get('sap_case'):
-                    cap_info.append(f"**SAP Case:** {analysis['sap_case']}")
-                if analysis.get('customer_name'):
-                    cap_info.append(f"**Customer:** {analysis['customer_name']}")
-                if analysis.get('synopsis'):
-                    cap_info.append(f"**Synopsis:** {analysis['synopsis']}")
-                
-                if cap_info:
-                    ui.markdown('\n\n'.join(cap_info))
+            with ui.card().classes('w-full mb-4 netapp-card').style('max-width: 80%; margin: 0 auto;'):
+                with ui.column().classes('netapp-card-content w-full'):
+                    ui.html('<div class="netapp-card-header">CAP Information</div>')
+                    
+                    cap_info = []
+                    if analysis.get('cap_color'):
+                        cap_info.append(f"**CAP Color:** {analysis['cap_color']}")
+                    if analysis.get('cpe_case'):
+                        cap_info.append(f"**CPE Case:** {analysis['cpe_case']}")
+                    if analysis.get('sap_case'):
+                        cap_info.append(f"**SAP Case:** {analysis['sap_case']}")
+                    if analysis.get('customer_name'):
+                        cap_info.append(f"**Customer:** {analysis['customer_name']}")
+                    if analysis.get('synopsis'):
+                        cap_info.append(f"**Synopsis:** {analysis['synopsis']}")
+                    
+                    if cap_info:
+                        ui.markdown('\n\n'.join(cap_info))

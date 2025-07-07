@@ -623,3 +623,69 @@ To fix this, enter the target slot explicitly using `with container_element:`.
 2025-07-06 20:43:01,359 - __main__ - INFO - Starting MCP-based RCA Tool
 2025-07-06 20:43:01,538 - __main__ - INFO - Starting server on 0.0.0.0:8090
 2025-07-06 20:43:19,419 - src.ui.main_app - INFO - Prompt selection changed to: kt-analysis_prompt
+2025-07-06 20:47:52,654 - __main__ - INFO - Starting MCP-based RCA Tool
+2025-07-06 20:47:52,876 - __main__ - INFO - Starting server on 0.0.0.0:8090
+2025-07-06 20:48:08,631 - src.ui.main_app - INFO - Prompt selection changed to: kt-analysis_prompt
+2025-07-06 20:48:49,533 - src.ui.main_app - INFO - Prompt selection changed to: formal_rca_prompt
+2025-07-06 20:49:09,152 - src.ui.main_app - ERROR - Error generating analysis: No module named 'exceptions'
+2025-07-06 20:49:39,446 - src.ui.main_app - ERROR - Error generating analysis: No module named 'exceptions'
+2025-07-06 20:49:58,211 - __main__ - INFO - Starting MCP-based RCA Tool
+2025-07-06 20:49:58,481 - __main__ - INFO - Starting server on 0.0.0.0:8090
+2025-07-06 20:50:28,157 - src.ui.main_app - ERROR - Error generating analysis: No module named 'exceptions'
+2025-07-06 21:01:33,137 - src.ui.main_app - INFO - Main MCP client imported successfully
+2025-07-06 21:01:35,702 - src.ui.main_app - INFO - Main MCP client imported successfully
+2025-07-06 21:02:59,378 - __main__ - INFO - Starting MCP-based RCA Tool
+2025-07-06 21:02:59,559 - src.ui.main_app - INFO - Main MCP client imported successfully
+2025-07-06 21:02:59,570 - __main__ - INFO - Starting server on 0.0.0.0:8090
+2025-07-06 21:10:57,043 - __main__ - INFO - Starting MCP-based RCA Tool
+2025-07-06 21:10:57,169 - src.ui.main_app - INFO - Main MCP client imported successfully
+2025-07-06 21:10:57,176 - __main__ - INFO - Starting server on 0.0.0.0:8090
+2025-07-06 21:15:54,902 - __main__ - INFO - Starting MCP-based RCA Tool
+2025-07-06 21:15:54,903 - __main__ - ERROR - Failed to start application: module 'nicegui.ui' has no attribute 'add_static_files'
+2025-07-06 21:16:12,140 - __main__ - INFO - Starting MCP-based RCA Tool
+2025-07-06 21:16:12,305 - src.ui.main_app - INFO - Main MCP client imported successfully
+2025-07-06 21:16:12,312 - __main__ - INFO - Starting server on 0.0.0.0:8090
+2025-07-06 21:18:53,671 - __main__ - INFO - Starting MCP-based RCA Tool
+2025-07-06 21:18:53,817 - src.ui.main_app - INFO - Main MCP client imported successfully
+2025-07-06 21:18:53,825 - __main__ - INFO - Starting server on 0.0.0.0:8090
+2025-07-06 21:22:52,135 - __main__ - INFO - Starting MCP-based RCA Tool
+2025-07-06 21:22:52,307 - src.ui.main_app - INFO - Main MCP client imported successfully
+2025-07-06 21:22:52,315 - __main__ - INFO - Starting server on 0.0.0.0:8090
+2025-07-06 21:24:16,509 - __main__ - INFO - Starting MCP-based RCA Tool
+2025-07-06 21:24:16,665 - src.ui.main_app - INFO - Main MCP client imported successfully
+2025-07-06 21:24:16,673 - __main__ - INFO - Starting server on 0.0.0.0:8090
+2025-07-07 07:39:54,415 - __main__ - INFO - Starting MCP-based RCA Tool
+2025-07-07 07:39:54,653 - src.ui.main_app - INFO - Main MCP client imported successfully
+2025-07-07 07:39:54,663 - __main__ - INFO - Starting server on 0.0.0.0:8090
+2025-07-07 07:44:54,614 - __main__ - INFO - Starting MCP-based RCA Tool
+2025-07-07 07:44:54,750 - src.ui.main_app - INFO - Main MCP client imported successfully
+2025-07-07 07:44:54,757 - __main__ - INFO - Starting server on 0.0.0.0:8090
+2025-07-07 07:49:26,259 - __main__ - INFO - Starting MCP-based RCA Tool
+2025-07-07 07:49:26,413 - src.ui.main_app - INFO - Main MCP client imported successfully
+2025-07-07 07:49:26,421 - __main__ - INFO - Starting server on 0.0.0.0:8090
+2025-07-07 07:53:07,831 - __main__ - INFO - Starting MCP-based RCA Tool
+2025-07-07 07:53:07,992 - src.ui.main_app - INFO - Main MCP client imported successfully
+2025-07-07 07:53:07,999 - __main__ - INFO - Starting server on 0.0.0.0:8090
+2025-07-07 07:53:44,838 - __main__ - INFO - Starting MCP-based RCA Tool
+2025-07-07 07:53:44,997 - src.ui.main_app - INFO - Main MCP client imported successfully
+2025-07-07 07:53:45,006 - __main__ - INFO - Starting server on 0.0.0.0:8090
+2025-07-07 07:55:53,232 - __main__ - INFO - Starting MCP-based RCA Tool
+2025-07-07 07:55:53,526 - src.ui.main_app - INFO - Main MCP client imported successfully
+2025-07-07 07:55:53,535 - __main__ - INFO - Starting server on 0.0.0.0:8090
+2025-07-07 07:58:37,120 - __main__ - INFO - Starting MCP-based RCA Tool
+2025-07-07 07:58:37,298 - src.ui.main_app - INFO - Main MCP client imported successfully
+2025-07-07 07:58:37,311 - __main__ - INFO - Starting server on 0.0.0.0:8090
+2025-07-07 08:00:54,188 - __main__ - INFO - Starting MCP-based RCA Tool
+2025-07-07 08:00:54,356 - src.ui.main_app - INFO - Main MCP client imported successfully
+2025-07-07 08:00:54,363 - __main__ - INFO - Starting server on 0.0.0.0:8090
+2025-07-07 08:04:26,028 - __main__ - INFO - Starting MCP-based RCA Tool
+2025-07-07 08:04:26,202 - src.ui.main_app - INFO - Main MCP client imported successfully
+2025-07-07 08:04:26,211 - __main__ - INFO - Starting server on 0.0.0.0:8090
+2025-07-07 08:17:02,870 - __main__ - INFO - Starting MCP-based RCA Tool
+2025-07-07 08:17:03,111 - src.ui.main_app - INFO - Main MCP client imported successfully
+2025-07-07 08:17:03,116 - __main__ - INFO - Starting server on 0.0.0.0:8090
+2025-07-07 08:17:14,352 - src.ui.main_app - ERROR - Failed to fetch linked issues for CPE-9800: JiraError HTTP 404 url: https://jira.ngage.netapp.com/rest/api/2/issue/CPE-9800?fields=issuelinks
+	text: Issue Does Not Exist
+	
+	response headers = {'x-arequestid': '497x57195186x4', 'x-anodeid': 'netapp2-roc-jira2', 'referrer-policy': 'strict-origin-when-cross-origin', 'x-xss-protection': '1; mode=block', 'x-content-type-options': 'nosniff', 'x-frame-options': 'SAMEORIGIN', 'content-security-policy': 'sandbox', 'strict-transport-security': 'max-age=31536000', 'set-cookie': 'JSESSIONID=jira2~C97F5D80B07C59E48A05CC74730E819F; Path=/; Secure; HttpOnly, atlassian.xsrf.token=B04H-RGAG-NABK-MI5N_6912c466541deee74a1a571a7fdfeadf59591909_lin; Path=/; Secure; SameSite=None', 'x-seraph-loginreason': 'OK', 'x-ratelimit-limit': '3000', 'x-ratelimit-remaining': '2999', 'x-ratelimit-fillrate': '2000', 'x-ratelimit-interval-seconds': '600', 'retry-after': '0', 'x-asessionid': '1mi8lcz', 'x-ausername': 'jbowman', 'cache-control': 'no-cache, no-store, no-transform', 'content-type': 'application/json;charset=UTF-8', 'content-length': '54', 'date': 'Mon, 07 Jul 2025 12:17:14 GMT'}
+	response text = {"errorMessages":["Issue Does Not Exist"],"errors":{}}

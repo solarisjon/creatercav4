@@ -35,6 +35,12 @@ def main():
         # Create and configure the app
         app = create_app()
         
+        # Setup static file serving for NetApp assets
+        from pathlib import Path
+        from nicegui import app as nicegui_app
+        static_dir = Path(__file__).parent / "src" / "ui" / "static"
+        nicegui_app.add_static_files('/static', static_dir)
+        
         # Determine host and port
         host = args.host or config.app_config['host']
         port = args.port or config.app_config['port']
@@ -52,7 +58,6 @@ def main():
             host=host,
             port=port,
             title=config.app_config['title'],
-            favicon='🔍',
             show=True,
             reload=args.debug
         )

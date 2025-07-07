@@ -1,0 +1,33 @@
+Test Issue Report
+==================
+
+Issue Description:
+Customer reported performance degradation in NFS operations during peak hours.
+
+Environment:
+- NetApp ONTAP 9.16.1P3
+- Protocol: NFSv3 and NFSv4.1
+- Storage: AFF A400
+- Network: 10GbE
+
+Symptoms:
+- High latency on NFS read/write operations
+- Intermittent timeouts
+- Performance degradation during peak hours (9 AM - 5 PM)
+
+Timeline:
+- Issue started on Friday morning
+- Customer noticed slow file access
+- Performance monitoring showed increased latencies
+- No recent configuration changes reported
+
+Initial Troubleshooting:
+- Checked system health - all green
+- Reviewed network utilization - normal
+- Examined storage performance metrics
+- No obvious resource constraints identified
+
+Customer Impact:
+- Productivity loss during business hours
+- Users experiencing slow file access
+- Critical business applications affected

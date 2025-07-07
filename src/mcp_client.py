@@ -1,12 +1,15 @@
 import asyncio
 import json
 import logging
-from typing import Dict, Any, List, Optional
+from typing import Dict, Any, List
 from pathlib import Path
 import httpx
 import platform
 import os
 import urllib3
+from mcp import ClientSession, StdioServerParameters
+from mcp.client.stdio import stdio_client
+from src.config import config
 
 # Configure SSL certificates
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
@@ -19,10 +22,6 @@ elif platformtype == "Darwin":
     pem_path = "/usr/local/etc/openssl@3/certs/../cert.pem"
     os.environ['REQUESTS_CA_BUNDLE'] = pem_path
     os.environ['SSL_CERT_FILE'] = pem_path
-
-from mcp import ClientSession, StdioServerParameters
-from mcp.client.stdio import stdio_client
-from src.config import config
 
 logger = logging.getLogger(__name__)
 
@@ -388,5 +387,15 @@ Description:
             logger.error(f"Failed to fetch Jira ticket {issue_key}: {e}")
             raise
 
-# Global MCP client instance
-mcp_client = MCPClient()
+# Global MCP client instance - lazy initialization
+_mcp_client_instance = None
+
+def get_mcp_client():
+    """Get the global MCP client instance (lazy initialization)"""
+    global _mcp_client_instance
+    if _mcp_client_instance is None:
+        _mcp_client_instance = MCPClient()
+    return _mcp_client_instance
+
+# For backward compatibility
+mcp_client = get_mcp_client()
