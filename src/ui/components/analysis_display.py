@@ -14,25 +14,25 @@ class AnalysisDisplay:
     # Mapping of prompt types to their expected sections
     PROMPT_SECTION_MAPS = {
         "formal_rca_prompt": [
-            ("Executive Summary", "executive_summary"),
-            ("Problem Statement", "problem_statement"),
             ("Timeline", "timeline"),
+            ("Customer Impact", "customer_impact"),
+            ("Technical Summary", "technical_summary"),
             ("Root Cause", "root_cause"),
-            ("Contributing Factors", "contributing_factors"),
-            ("Impact Assessment", "impact_assessment"),
-            ("Corrective Actions", "corrective_actions"),
-            ("Preventive Measures", "preventive_measures"),
-            ("Recommendations", "recommendations"),
-            ("Escalation Needed", "escalation_needed"),
-            ("Defect Tickets Needed", "defect_tickets_needed"),
-            ("Severity", "severity"),
-            ("Priority", "priority"),
+            ("Next Steps", "next_steps"),
+            ("Prevention", "prevention"),
+            ("Escalation", "escalation"),
+            ("Executive Summary", "executive_summary"),  # fallback
         ],
         "initial_analysis_prompt": [
-            ("Overview", "overview"),
-            ("Key Findings", "key_findings"),
-            ("Summary", "summary"),
+            ("CAP Information", "cap_info"),  # will be handled specially
+            ("People", "people"),
+            ("Timeline", "timeline"),
+            ("Technical Summary", "technical_summary"),
+            ("Impact", "impact"),
+            ("Next Steps", "next_steps"),
+            ("Escalation", "escalation"),
             ("Recommendations", "recommendations"),
+            ("Overview", "overview"),  # fallback
         ],
         "kt-analysis_prompt": [
             ("Executive Summary", "executive_summary"),
@@ -108,8 +108,8 @@ class AnalysisDisplay:
                 result = raw_analysis.copy()
                 result['sources_used'] = analysis.get('sources_used', [])
                 # Also keep the KT special sections if they exist
-                for key in ['kepner_tregoe_template', 'problem_assessment_table', 
-                           'issue_description', 'source_data_analysis', 'jira_tickets_referenced']:
+                for key in ['kepner_tregoe_analysis', 'is_is_not_table', 
+                           'root_cause_analysis', 'solution_development', 'prevention_strategy', 'recommendations']:
                     if key in analysis:
                         result[key] = analysis[key]
                 return result
@@ -143,11 +143,12 @@ class AnalysisDisplay:
     def _display_kt_special_sections(self, analysis: Dict[str, Any]):
         """Display KT-specific sections that come from raw response parsing"""
         kt_special_sections = [
-            ("Kepner-Tregoe Analysis Template", "kepner_tregoe_template"),
-            ("Problem Assessment Table", "problem_assessment_table"),
-            ("Issue Description", "issue_description"), 
-            ("Source Data Analysis", "source_data_analysis"),
-            ("JIRA Tickets Referenced", "jira_tickets_referenced")
+            ("Kepner-Tregoe Problem Analysis", "kepner_tregoe_analysis"),
+            ("Problem Specification (IS/IS NOT Analysis)", "is_is_not_table"),
+            ("Root Cause Analysis", "root_cause_analysis"), 
+            ("Solution Development", "solution_development"),
+            ("Prevention Strategy", "prevention_strategy"),
+            ("Recommendations and Next Steps", "recommendations")
         ]
         
         for header, key in kt_special_sections:
@@ -156,27 +157,101 @@ class AnalysisDisplay:
                 with ui.card().classes('w-full mb-4'):
                     ui.label(header).classes('text-lg font-semibold mb-2')
                     
-                    # Special handling for Problem Assessment table
-                    if key == "problem_assessment_table":
+                    # Special handling for IS/IS NOT table
+                    if key == "is_is_not_table":
                         self._render_kt_table(value)
                     else:
                         self._render_content(value)
     
     def _render_kt_table(self, table_content: str):
-        """Render KT Problem Assessment table with proper formatting"""
+        """Render KT Problem Assessment table with proper HTML formatting"""
         try:
-            # Try to render as HTML table using markdown
+            # Parse markdown table and convert to proper HTML table
+            html_table = self._convert_markdown_table_to_html(table_content)
+            if html_table:
+                ui.html(html_table)
+                return
+        except Exception as e:
+            logger.warning(f"Error converting table to HTML: {e}")
+        
+        # Fallback: try markdown rendering
+        try:
             import markdown
             from markdown.extensions.tables import TableExtension
             html = markdown.markdown(table_content, extensions=[TableExtension()])
             ui.html(html)
         except ImportError:
-            # Fallback: render as preformatted text
+            # Final fallback: render as preformatted text
             ui.html(f"<pre class='whitespace-pre-wrap font-mono text-sm bg-gray-100 p-3 rounded'>{table_content}</pre>")
         except Exception as e:
             logger.warning(f"Error rendering KT table: {e}")
-            # Final fallback
+            # Ultimate fallback
             ui.markdown(table_content)
+    
+    def _convert_markdown_table_to_html(self, markdown_table: str) -> str:
+        """Convert markdown table to HTML table with proper styling"""
+        lines = markdown_table.strip().split('\n')
+        if not lines:
+            return ""
+        
+        # Find table lines (contain |)
+        table_lines = [line.strip() for line in lines if line.strip() and '|' in line]
+        if len(table_lines) < 2:
+            return ""
+        
+        # Parse header
+        header_line = table_lines[0]
+        headers = [cell.strip() for cell in header_line.split('|') if cell.strip()]
+        
+        # Skip separator line (usually line with --- )
+        data_lines = []
+        for line in table_lines[1:]:
+            if not line.replace('|', '').replace('-', '').replace(' ', ''):
+                continue  # Skip separator lines
+            data_lines.append(line)
+        
+        # Build HTML table
+        html_parts = [
+            '<div class="overflow-x-auto">',
+            '<table class="min-w-full bg-white border border-gray-300 rounded-lg shadow-sm">',
+            '<thead class="bg-gray-50">',
+            '<tr>'
+        ]
+        
+        # Add headers
+        for header in headers:
+            # Clean up markdown formatting in headers
+            clean_header = header.replace('**', '').replace('*', '')
+            html_parts.append(f'<th class="px-4 py-3 text-left text-sm font-semibold text-gray-900 border-b border-gray-300">{clean_header}</th>')
+        
+        html_parts.extend(['</tr>', '</thead>', '<tbody>'])
+        
+        # Add data rows
+        for i, line in enumerate(data_lines):
+            cells = [cell.strip() for cell in line.split('|') if cell.strip()]
+            if len(cells) >= len(headers):  # Only process complete rows
+                row_class = "bg-white" if i % 2 == 0 else "bg-gray-50"
+                html_parts.append(f'<tr class="{row_class}">')
+                
+                for j, cell in enumerate(cells[:len(headers)]):  # Match header count
+                    # Clean up markdown formatting and handle empty cells
+                    clean_cell = cell.replace('**', '').replace('*', '').strip()
+                    if not clean_cell:
+                        clean_cell = "&nbsp;"
+                    
+                    # Style first column differently (dimension labels)
+                    if j == 0:
+                        cell_class = "px-4 py-3 text-sm font-medium text-gray-900 border-b border-gray-200"
+                    else:
+                        cell_class = "px-4 py-3 text-sm text-gray-700 border-b border-gray-200"
+                    
+                    html_parts.append(f'<td class="{cell_class}">{clean_cell}</td>')
+                
+                html_parts.append('</tr>')
+        
+        html_parts.extend(['</tbody>', '</table>', '</div>'])
+        
+        return '\n'.join(html_parts)
     
     def _render_content(self, value: Any):
         """Render content based on its type"""
@@ -187,14 +262,22 @@ class AnalysisDisplay:
             if "<table" in value.lower():
                 ui.html(value)
             elif "|" in value and value.count("|") > 2:
-                # Markdown table
+                # Markdown table - convert to HTML
                 try:
-                    import markdown
-                    from markdown.extensions.tables import TableExtension
-                    html = markdown.markdown(value, extensions=[TableExtension()])
-                    ui.html(html)
-                except ImportError:
-                    ui.code(value).classes('w-full')
+                    html_table = self._convert_markdown_table_to_html(value)
+                    if html_table:
+                        ui.html(html_table)
+                    else:
+                        ui.markdown(value)
+                except Exception:
+                    # Fallback to markdown rendering
+                    try:
+                        import markdown
+                        from markdown.extensions.tables import TableExtension
+                        html = markdown.markdown(value, extensions=[TableExtension()])
+                        ui.html(html)
+                    except ImportError:
+                        ui.code(value).classes('w-full')
             else:
                 ui.markdown(str(value))
         else:
@@ -256,5 +339,39 @@ class AnalysisDisplay:
         # Display sources
         self._display_sources(analysis)
         
+        # Special handling for initial analysis CAP information
+        if prompt_file == "initial_analysis_prompt":
+            self._display_cap_info(analysis)
+        
         # Display sections
         self._display_json_sections(analysis, prompt_file)
+        
+        # If no structured sections found, display raw response
+        if not any(analysis.get(key) for _, key in self.PROMPT_SECTION_MAPS.get(prompt_file, [])):
+            raw_response = analysis.get('raw_response', '')
+            if raw_response:
+                with ui.card().classes('w-full mb-4'):
+                    ui.label("Analysis Result").classes('text-lg font-semibold mb-2')
+                    self._render_content(raw_response)
+
+    def _display_cap_info(self, analysis: Dict[str, Any]):
+        """Display CAP information for initial analysis"""
+        cap_fields = ['cap_color', 'cpe_case', 'sap_case', 'customer_name', 'synopsis']
+        if any(analysis.get(field) for field in cap_fields):
+            with ui.card().classes('w-full mb-4'):
+                ui.label("CAP Information").classes('text-lg font-semibold mb-2')
+                
+                cap_info = []
+                if analysis.get('cap_color'):
+                    cap_info.append(f"**CAP Color:** {analysis['cap_color']}")
+                if analysis.get('cpe_case'):
+                    cap_info.append(f"**CPE Case:** {analysis['cpe_case']}")
+                if analysis.get('sap_case'):
+                    cap_info.append(f"**SAP Case:** {analysis['sap_case']}")
+                if analysis.get('customer_name'):
+                    cap_info.append(f"**Customer:** {analysis['customer_name']}")
+                if analysis.get('synopsis'):
+                    cap_info.append(f"**Synopsis:** {analysis['synopsis']}")
+                
+                if cap_info:
+                    ui.markdown('\n\n'.join(cap_info))

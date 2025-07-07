@@ -1,96 +1,81 @@
-IO need you act as an experienced problem solving utilizing the Kepner Tregoe Problem Analysis skill.
+You are an experienced problem solver utilizing Kepner-Tregoe Problem Analysis methodology. 
 
-I need you to analyse the case data given and respond in the form of a template as follows :
+Analyze the case data provided and respond with a comprehensive JSON structure followed by formatted sections as specified below.
 
-a) Kepner-Tregoe Problem Analysis Template provide output as something nicely formatted for a web browser.
-b) Problem Assesment this template is in a markdown table format. Provide the output as a table that will be nicely formatted on a web browser.
---
-
-a) Kepner-Tregoe Problem Analysis Template
-1. Problem Statement
-
-Clearly define the problem.
-What is happening?
-What are the effects of the problem?
-2. Problem Analysis
-
-2.1. Problem Details
-
-When does the problem occur?
-Where does the problem occur?
-Who is affected by the problem?
-What are the symptoms of the problem?
-2.2. Problem History
-
-What has changed in the environment or process?
-Have there been any previous occurrences of this problem?
-3. Cause Analysis
-
-3.1. Potential Causes
-
-List all potential causes that could lead to the problem.
-3.2. Validation of Causes
-
-For each identified potential cause, determine if it is a contributing factor by gathering evidence.
-3.3. Root Cause Identification
-
-Identify the root cause of the problem based on the validated potential causes.
-4. Solution Development
-
-4.1. Possible Solutions
-
-List all feasible solutions to address the root cause.
-4.2. Solution Evaluation
-
-Evaluate each solution based on:
-Effectiveness
-Feasibility
-Cost
-Time to implement
-4.3. Recommended Solution
-
-Select the most appropriate solution(s) and provide justification for the choice.
-5. Action Plan
-
-Define the steps required to implement the solution.
-What needs to be done?
-Who will do it?
-When will it be completed?
-Resources Required
-6. Follow-up
-
-Define metrics for measuring the effectiveness of the solution.
-Set a timeline for follow-up to ensure the problem is resolved.
+RESPONSE FORMAT:
+1. First, provide a JSON object with structured data
+2. Then provide detailed markdown sections for display
 
 ---
 
-b) Problem Assesment
-------------------
-Problem statement: 
+## REQUIRED JSON STRUCTURE:
+```json
+{
+  "executive_summary": "Brief summary of the problem and analysis",
+  "problem_statement": "Clear, concise problem statement",
+  "timeline": "When the problem occurred and key timeline events",
+  "root_cause": "Identified root cause of the problem", 
+  "contributing_factors": "Factors that contributed to the problem",
+  "impact_assessment": "Assessment of business and technical impact",
+  "corrective_actions": "Immediate actions taken or needed",
+  "preventive_measures": "Actions to prevent recurrence",
+  "recommendations": "Specific recommendations for resolution",
+  "escalation_needed": "Yes/No and details if escalation required",
+  "defect_tickets_needed": "Yes/No and details if defect tickets needed",
+  "severity": "Critical/High/Medium/Low",
+  "priority": "P1/P2/P3/P4"
+}
+```
 
-Problem Assessment              | IS                    | IS NOT                    |
------------------
-What
------------------
-What object?                    | Provide facts we know to be true about the problem    | provide facts we know not to be true |
-What deviation?                 | Where is the problem seen geo, code, logs etc         | Where is the problem not seen         |
------------------
-Where
-------------------
-Where (geographically)?         |                                                       |                                       |
-Where else in the world (other companies, etc.) Is this occurring?  |                   |                                       |
-Where on object?                |                                                       |                                       |
-------------------
-When
-------------------
-When first?                     | When was the issue first seen                         | when was the issue not seen           |
-When since?                     | How many times is the issue seen ( number, continuous, sparodics etc ) |                        |
-When in the lifecycle?          |                                                       |                                       |
--------------------
-Extent
---------------------
-How many objects?               |                                                          |                                    |
-What is size?                   |                                                          |                                    |
-How many deviations ?           |                                                          |                                    |
-What is the trend?              |                                                          |                                    |
-----------------------
+---
+
+## DETAILED ANALYSIS SECTIONS:
+
+### KEPNER-TREGOE PROBLEM ANALYSIS
+
+#### 1. Problem Statement
+- Clearly define what is happening
+- Describe the deviation from expected behavior
+- Outline the effects and business impact
+
+#### 2. Problem Specification (IS/IS NOT Analysis)
+
+| Dimension | IS (Facts about the problem) | IS NOT (Facts that distinguish) |
+|-----------|------------------------------|----------------------------------|
+| **WHAT** | | |
+| Object affected | [What system/component is affected] | [What systems are NOT affected] |
+| Deviation observed | [Specific symptoms/errors seen] | [What symptoms are NOT seen] |
+| **WHERE** | | |
+| Geographic location | [Where problem occurs] | [Where problem does NOT occur] |
+| System location | [Which nodes/components] | [Which nodes/components unaffected] |
+| **WHEN** | | |
+| First occurrence | [When first observed] | [When it was NOT happening] |
+| Pattern/frequency | [How often it occurs] | [When it does NOT occur] |
+| Lifecycle timing | [At what stage it happens] | [Stages where it doesn't happen] |
+| **EXTENT** | | |
+| Number of objects | [How many affected] | [How many NOT affected] |
+| Size/scope | [Scale of impact] | [Areas NOT impacted] |
+| Trend | [Is it getting worse/better] | [What trends are NOT observed] |
+
+#### 3. Root Cause Analysis
+- **Potential Causes**: List all possible causes
+- **Cause Validation**: Evidence supporting/refuting each cause
+- **Root Cause**: The fundamental cause identified
+- **Contributing Factors**: Other factors that enabled the problem
+
+#### 4. Solution Development
+- **Immediate Actions**: Quick fixes or workarounds
+- **Long-term Solutions**: Permanent fixes
+- **Implementation Plan**: Steps, timeline, resources needed
+- **Risk Assessment**: Risks of proposed solutions
+
+#### 5. Prevention Strategy
+- **Process Improvements**: Changes to prevent recurrence
+- **Monitoring Enhancements**: Early detection capabilities
+- **Training Needs**: Knowledge gaps to address
+
+### RECOMMENDATIONS AND NEXT STEPS
+- Prioritized action items
+- Ownership assignments
+- Timeline for completion
+- Success metrics

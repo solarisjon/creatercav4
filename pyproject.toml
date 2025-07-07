@@ -24,4 +24,5 @@ dependencies = [
     "pytest-cov>=4.1.0",
     "openai>=1.0.0",
     "anthropic>=0.7.0",
+    "docx>=0.2.4",
 ]

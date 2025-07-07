@@ -572,3 +572,54 @@
 2025-07-06 15:14:43,293 - src.app - INFO - KT processed fields are mostly empty, using raw_analysis
 2025-07-06 15:14:43,293 - src.app - INFO - Using raw_analysis with keys: ['executive_summary', 'problem_statement', 'timeline', 'root_cause', 'contributing_factors', 'impact_assessment', 'corrective_actions', 'preventive_measures', 'recommendations', 'escalation_needed', 'defect_tickets_needed', 'severity', 'priority', 'sources_used']
 2025-07-06 15:14:43,293 - src.app - INFO - Updated section mapping for raw_analysis with 13 sections: ['Executive Summary', 'Problem Statement', 'Timeline', 'Root Cause', 'Contributing Factors', 'Impact Assessment', 'Corrective Actions', 'Preventive Measures', 'Recommendations', 'Escalation Needed', 'Defect Tickets Needed', 'Severity', 'Priority']
+2025-07-06 15:39:13,665 - __main__ - INFO - Starting MCP-based RCA Tool
+2025-07-06 15:39:13,815 - __main__ - ERROR - Failed to start application: FileHandler.__init__() missing 2 required positional arguments: 'upload_dir' and 'allowed_extensions'
+2025-07-06 15:40:29,401 - __main__ - INFO - Starting MCP-based RCA Tool
+2025-07-06 15:40:29,575 - __main__ - ERROR - Failed to start application: Config.get() missing 1 required positional argument: 'key'
+2025-07-06 15:41:24,240 - __main__ - INFO - Starting MCP-based RCA Tool
+2025-07-06 15:41:24,414 - __main__ - ERROR - Failed to start application: Config.get() missing 1 required positional argument: 'key'
+2025-07-06 15:43:00,879 - __main__ - INFO - Starting MCP-based RCA Tool
+2025-07-06 15:43:01,063 - __main__ - ERROR - Failed to start application: Config.get() missing 1 required positional argument: 'key'
+2025-07-06 15:44:22,370 - __main__ - INFO - Starting MCP-based RCA Tool
+2025-07-06 15:44:22,526 - __main__ - INFO - Starting server on 0.0.0.0:8090
+2025-07-06 15:44:49,667 - src.ui.main_app - INFO - Prompt selection changed to: kt-analysis_prompt
+2025-07-06 15:46:06,136 - __main__ - INFO - Starting MCP-based RCA Tool
+2025-07-06 15:46:06,326 - __main__ - INFO - Starting server on 0.0.0.0:8090
+2025-07-06 15:47:39,020 - __main__ - INFO - Starting MCP-based RCA Tool
+2025-07-06 15:47:39,186 - __main__ - INFO - Starting server on 0.0.0.0:8090
+2025-07-06 15:47:59,788 - __main__ - INFO - Starting MCP-based RCA Tool
+2025-07-06 15:47:59,969 - __main__ - INFO - Starting server on 0.0.0.0:8090
+2025-07-06 15:49:09,560 - __main__ - INFO - Starting MCP-based RCA Tool
+2025-07-06 15:49:09,752 - __main__ - INFO - Starting server on 0.0.0.0:8090
+2025-07-06 15:49:30,213 - __main__ - INFO - Starting MCP-based RCA Tool
+2025-07-06 15:49:30,382 - __main__ - INFO - Starting server on 0.0.0.0:8091
+2025-07-06 15:49:43,849 - src.ui.main_app - INFO - Prompt selection changed to: kt-analysis_prompt
+2025-07-06 15:51:58,699 - __main__ - INFO - Starting MCP-based RCA Tool
+2025-07-06 15:51:58,869 - __main__ - INFO - Starting server on 0.0.0.0:8092
+2025-07-06 15:52:24,236 - src.ui.main_app - INFO - Prompt selection changed to: kt-analysis_prompt
+2025-07-06 15:53:47,979 - __main__ - INFO - Starting MCP-based RCA Tool
+2025-07-06 15:53:48,151 - __main__ - INFO - Starting server on 0.0.0.0:8093
+2025-07-06 15:54:09,565 - src.ui.main_app - INFO - Prompt selection changed to: kt-analysis_prompt
+2025-07-06 15:56:11,607 - __main__ - INFO - Starting MCP-based RCA Tool
+2025-07-06 15:56:11,857 - __main__ - INFO - Starting server on 0.0.0.0:8094
+2025-07-06 15:56:27,876 - src.ui.main_app - INFO - Prompt selection changed to: kt-analysis_prompt
+2025-07-06 15:58:32,122 - __main__ - INFO - Starting MCP-based RCA Tool
+2025-07-06 15:58:32,293 - __main__ - INFO - Starting server on 0.0.0.0:8094
+2025-07-06 15:58:40,080 - src.ui.main_app - ERROR - Failed to fetch linked issues for CPE-9501: The current slot cannot be determined because the slot stack for this task is empty.
+This may happen if you try to create UI from a background task.
+To fix this, enter the target slot explicitly using `with container_element:`.
+2025-07-06 16:00:47,690 - __main__ - INFO - Starting MCP-based RCA Tool
+2025-07-06 16:00:47,892 - __main__ - INFO - Starting server on 0.0.0.0:8095
+2025-07-06 16:01:09,786 - src.ui.main_app - INFO - Prompt selection changed to: kt-analysis_prompt
+2025-07-06 16:08:34,813 - __main__ - INFO - Starting MCP-based RCA Tool
+2025-07-06 16:08:35,032 - __main__ - INFO - Starting server on 0.0.0.0:8090
+2025-07-06 16:09:16,077 - src.ui.main_app - INFO - Prompt selection changed to: initial_analysis_prompt
+2025-07-06 16:09:32,408 - src.ui.main_app - INFO - Prompt selection changed to: kt-analysis_prompt
+2025-07-06 16:09:49,132 - src.ui.main_app - INFO - Prompt selection changed to: formal_rca_prompt
+2025-07-06 20:33:10,120 - __main__ - INFO - Starting MCP-based RCA Tool
+2025-07-06 20:33:10,311 - __main__ - INFO - Starting server on 0.0.0.0:8096
+2025-07-06 20:34:03,966 - src.ui.main_app - INFO - Prompt selection changed to: initial_analysis_prompt
+2025-07-06 20:34:22,143 - src.ui.main_app - INFO - Prompt selection changed to: kt-analysis_prompt
+2025-07-06 20:43:01,359 - __main__ - INFO - Starting MCP-based RCA Tool
+2025-07-06 20:43:01,538 - __main__ - INFO - Starting server on 0.0.0.0:8090
+2025-07-06 20:43:19,419 - src.ui.main_app - INFO - Prompt selection changed to: kt-analysis_prompt

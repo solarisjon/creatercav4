@@ -69,8 +69,7 @@ class RCAEngine:
             )
             
             # Parse response
-            analysis_mode = "kt-analysis" if analysis_type == "kt-analysis_prompt" else "standard"
-            parsed_analysis = self.response_parser.parse_llm_response(raw_response, analysis_mode)
+            parsed_analysis = self.response_parser.parse_llm_response(raw_response, analysis_type)
             
             # Add metadata
             result = {
